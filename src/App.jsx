@@ -415,6 +415,13 @@ export default function App() {
 
   // Script FB SDK e Chatwoot
   useEffect(() => {
+    // Chatwoot Integration (expanded bubble)
+    window.chatwootSettings = {
+      position: 'right',
+      type: 'expanded_bubble',
+      launcherTitle: 'Converse com a IARA',
+    };
+
     (function(d,t) {
       var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
       g.src=CHATWOOT_BASE_URL+"/packs/js/sdk.js";
