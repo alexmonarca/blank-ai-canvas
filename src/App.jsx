@@ -655,9 +655,9 @@ const VideoModal = ({ isOpen, onClose, videoId }) => {
         {" "}
         <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-gray-800/50">
           {" "}
-          <h3 className="text-white font-bold flex items-center gap-2">
-            <PlayCircle className="w-5 h-5 text-blue-400" /> Tutorial IARA Gym
-          </h3>{" "}
+           <h3 className="text-white font-bold flex items-center gap-2">
+             <PlayCircle className="w-5 h-5 text-blue-400" /> Tutorial IARA
+           </h3>{" "}
           <button onClick={onClose} className="text-gray-400 hover:text-white bg-gray-700 p-1 rounded-full">
             <X className="w-5 h-5" />
           </button>{" "}
@@ -789,14 +789,14 @@ const AuthScreen = ({ onLogin, initialMode = "login", onBackToLanding }) => {
             className="flex items-center gap-2"
             aria-label="Ir para a página inicial"
           >
-            <div className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center border border-gray-700 overflow-hidden">
-              <img
-                src="/favicon.png"
-                alt="Logo IARA"
-                className="w-7 h-7 object-contain"
-                onError={(e) => (e.target.style.display = "none")}
-              />
-            </div>
+             <div className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center border border-gray-700 overflow-hidden">
+               <img
+                 src="/logo-iara.png"
+                 alt="Logo IARA"
+                 className="w-9 h-9 object-contain"
+                 onError={(e) => (e.target.style.display = "none")}
+               />
+             </div>
             <span className="text-white font-bold">IARA</span>
           </button>
 
@@ -2417,7 +2417,7 @@ function Dashboard({ session }) {
         <div className="p-6 flex items-center gap-2 font-bold text-2xl text-orange-400 tracking-tighter">
           <img
             src="/logo-iara.png"
-            alt="IARA Gym"
+            alt="Logo IARA"
             className="h-10 object-contain"
             onError={(e) => {
               e.target.style.display = "none";
@@ -2494,7 +2494,7 @@ function Dashboard({ session }) {
       {/* Mobile Header */}
       <div className="md:hidden bg-gray-900 p-4 border-b border-gray-800 flex justify-between items-center sticky top-0 z-40">
         <div className="flex items-center gap-2 font-bold text-xl text-orange-400">
-          <img src="/logo-iara.png" className="h-8" alt="IARA Gym" /> IARA Gym
+          <img src="/logo-iara.png" className="h-8" alt="Logo IARA" /> IARA
         </div>
         <button className="text-gray-300 p-2" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
           {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -2506,7 +2506,7 @@ function Dashboard({ session }) {
         <div className="md:hidden fixed inset-0 z-50 bg-gray-950 animate-in fade-in duration-200">
           <div className="p-4 border-b border-gray-800 flex justify-between items-center bg-gray-900">
             <div className="flex items-center gap-2 font-bold text-xl text-orange-400">
-              <img src="/logo-iara.png" className="h-8" alt="IARA Gym" /> IARA Gym
+              <img src="/logo-iara.png" className="h-8" alt="Logo IARA" /> IARA
             </div>
             <button className="text-gray-300 p-2" onClick={() => setMobileMenuOpen(false)}>
               <X className="w-6 h-6" />
