@@ -57,13 +57,37 @@ export default function LandingPage({ onOpenLogin, onOpenSignup }) {
               <h1 className="text-balance text-4xl font-semibold tracking-tight md:text-6xl">
                 IA pronta para operar seu <span className="text-primary">Negócio</span>
               </h1>
-              <p className="mt-3 max-w-2xl text-pretty text-base leading-relaxed text-foreground/90 md:text-lg">
-                Iara é a sua Gestora de Mídias e Secretária inteligente que cuida da rotina em redes sociais, criação de
-                artes e atendimento, tirando dúvidas e vendendo 24h por dia. Economize dois salários com apenas uma IA!
-              </p>
-              <p className="mt-5 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground md:text-lg">
-                A IARA ajuda você a organizar atendimento, rotinas e conteúdo — sem depender de um nicho específico.
-              </p>
+              <div className="mt-3 max-w-2xl">
+                <p className="text-pretty text-base leading-relaxed text-foreground/90 md:text-lg">
+                  Iara é a sua Gestora de Mídias e Secretária inteligente que cuida da rotina!
+                </p>
+                <ul className="mt-4 space-y-2 text-sm text-muted-foreground md:text-base">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 text-primary flex-shrink-0" />
+                    <span>Atendimento no WhatsApp;</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 text-primary flex-shrink-0" />
+                    <span>Suporte a interações e direct Instagram</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 text-primary flex-shrink-0" />
+                    <span>Gestão de conteúdo</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 text-primary flex-shrink-0" />
+                    <span>Criação de artes</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 text-primary flex-shrink-0" />
+                    <span>Agendamento de Posts</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 text-primary flex-shrink-0" />
+                    <span>Vendas 24h.</span>
+                  </li>
+                </ul>
+              </div>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <button
@@ -193,7 +217,7 @@ export default function LandingPage({ onOpenLogin, onOpenSignup }) {
       <footer className="border-t border-border">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-8 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
           <span>© {new Date().getFullYear()} IARA</span>
-          <span>Plataforma minimalista, pronta para evoluir.</span>
+          <span>Desenvolvido com carinho por MonarcaHub</span>
         </div>
       </footer>
     </div>
