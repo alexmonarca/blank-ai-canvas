@@ -986,15 +986,36 @@ function Dashboard({ session }) {
   }, [session]);
 
   const VALID_COUPONS = { IARA50: 50, PROMO100: 100, PARCEIRO: 150, MONARCA200: 200 };
+  const MIN_TOTAL_FOR_COUPON = 250;
+
   const handleApplyCoupon = () => {
     const code = coupon.toUpperCase().trim();
-    if (VALID_COUPONS[code]) {
-      setAppliedCoupon({ code, amount: VALID_COUPONS[code] });
-      setCouponError("");
-    } else {
+    const amount = VALID_COUPONS[code];
+
+    // Regra: cupom só vale para compras acima de R$ 250 (valor do plano sem descontos).
+    // Obs: aqui não consideramos descontos (cupom/onboarding) na elegibilidade.
+    const totalWithoutDiscounts = calculateTotal(
+      gymData,
+      extraChannels,
+      gymData.extra_users_count,
+      0,
+      0,
+    );
+
+    if (!amount) {
       setAppliedCoupon(null);
       setCouponError("Cupom inválido ou expirado.");
+      return;
     }
+
+    if (totalWithoutDiscounts <= MIN_TOTAL_FOR_COUPON) {
+      setAppliedCoupon(null);
+      setCouponError("Cupom válido apenas para planos acima de R$ 250.");
+      return;
+    }
+
+    setAppliedCoupon({ code, amount });
+    setCouponError("");
   };
 
   const [gymData, setGymData] = useState({
@@ -1421,18 +1442,23 @@ function Dashboard({ session }) {
   };
 
   // CÁLCULO DE PREÇO (COM DESCONTO ONBOARDING)
+  // Regra: cupom só aplica quando o total sem descontos for > R$ 250.
+  const totalWithoutDiscounts = calculateTotal(gymData, extraChannels, gymData.extra_users_count, 0, 0);
+  const couponAmountToApply =
+    appliedCoupon && totalWithoutDiscounts > MIN_TOTAL_FOR_COUPON ? appliedCoupon.amount : 0;
+
   const totalPrice = calculateTotal(
     gymData,
     extraChannels,
     gymData.extra_users_count,
-    appliedCoupon ? appliedCoupon.amount : 0,
+    couponAmountToApply,
     onboardingDiscount,
   );
   const initialPrice = calculateTotal(
     initialGymData,
     extraChannels,
     gymData.extra_users_count,
-    appliedCoupon ? appliedCoupon.amount : 0,
+    couponAmountToApply,
     onboardingDiscount,
   );
 
@@ -1469,7 +1495,7 @@ function Dashboard({ session }) {
       user_id: userId,
       email: session.user.email,
       valor_total: finalCheckoutValue,
-      cupom_aplicado: appliedCoupon ? appliedCoupon.code : null,
+        cupom_aplicado: couponAmountToApply > 0 && appliedCoupon ? appliedCoupon.code : null,
       desconto_onboarding: onboardingDiscount,
       tipo_pagamento: isActiveSubscriber ? "upgrade" : "new",
       detalhes: {
