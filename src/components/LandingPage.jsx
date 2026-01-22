@@ -56,6 +56,10 @@ export default function LandingPage({ onOpenLogin, onOpenSignup }) {
               <h1 className="text-balance text-4xl font-semibold tracking-tight md:text-6xl">
                 IA pronta para operar seu <span className="text-primary">Negócio</span>
               </h1>
+              <p className="mt-3 max-w-2xl text-pretty text-base leading-relaxed text-foreground/90 md:text-lg">
+                Iara é a sua Gestora de Mídias e Secretária inteligente que cuida da rotina em redes sociais, criação de
+                artes e atendimento, tirando dúvidas e vendendo 24h por dia. Economize dois salários com apenas uma IA!
+              </p>
               <p className="mt-5 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground md:text-lg">
                 A IARA ajuda você a organizar atendimento, rotinas e conteúdo — sem depender de um nicho específico.
               </p>
@@ -150,12 +154,20 @@ export default function LandingPage({ onOpenLogin, onOpenSignup }) {
           <h2 className="text-2xl font-semibold tracking-tight">Dúvidas</h2>
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             <FaqItem
-              q="A IARA serve para qualquer tipo de negócio?"
-              a="Sim — a ideia é ser agnóstica de nicho. Vamos substituindo os termos específicos (ex.: academia) por termos genéricos." 
+              q="Tem teste grátis?"
+              a="Sim. Ao entrar pela primeira vez você pode experimentar antes de contratar o seu plano."
             />
             <FaqItem
-              q="Consigo acessar o painel depois?"
-              a="Sim. Você pode entrar a qualquer momento pelo botão “Entrar” no topo." 
+              q="Preciso deixar meu celular ligado?"
+              a="Não! A conexão é feita uma única vez via QR Code (como no WhatsApp Web) e nossa nuvem mantém tudo rodando 24h, mesmo com seu celular desligado ou sem internet."
+            />
+            <FaqItem
+              q="Como a IA aprende sobre meu negócio?"
+              a='Você conversa em um chat com ela e passa informações como se estivesse ensinando por chat um novo colaborador, informando sobre seus preços, horários e diferenciais. A IARA processa isso e já sai atendendo com a "personalidade" do seu negócio.'
+            />
+            <FaqItem
+              q="Ela substitui um gestor de tráfego?"
+              a="A IARA cuida do atendimento (fundo de funil) e da criação de conteúdo orgânico. Ela potencializa o trabalho do gestor, garantindo que nenhum lead vindo dos anúncios seja perdido por falta de resposta."
             />
           </div>
 
