@@ -1,5 +1,6 @@
 import React from "react";
 import { ArrowRight, BrainCircuit, CheckCircle2, Shield, Sparkles } from "lucide-react";
+import PlanBuilder from "./PlanBuilder";
 
 export default function LandingPage({ onOpenLogin, onOpenSignup }) {
   return (
@@ -138,6 +139,8 @@ export default function LandingPage({ onOpenLogin, onOpenSignup }) {
             />
           </div>
         </section>
+
+        <PlanBuilder onCta={onOpenSignup} />
 
         <section id="como-funciona" className="border-y border-border bg-card/30">
           <div className="mx-auto max-w-6xl px-4 py-14">
