@@ -4,6 +4,7 @@ import AdminTrialPanel from './components/admin/AdminTrialPanel.jsx';
 import HomeAIStart from './components/HomeAIStart.jsx';
 import ConnectionsPage from './components/ConnectionsPage.jsx';
 import MidiasPage from './components/MidiasPage.jsx';
+import LandingPage from './components/LandingPage.jsx';
 import { supabase as supabaseClient } from '@/lib/supabaseClient';
 import { env } from '@/config/env';
 import { 
@@ -394,10 +395,10 @@ const OnboardingStepsModal = ({ isOpen, onClose, gymData, connectionStatus, plan
 // ==========================================
 // AUTH SCREEN
 // ==========================================
-const AuthScreen = ({ onLogin }) => {
+const AuthScreen = ({ onLogin, onBack }) => {
   const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [isSignUp, setIsSignUp] = useState(false); const [loading, setLoading] = useState(false); const [error, setError] = useState('');
   const handleAuth = async (e) => { e.preventDefault(); setLoading(true); setError(''); if (!supabaseClient) { setError("Erro: Supabase não iniciado."); setLoading(false); return; } try { let result; if (isSignUp) result = await supabaseClient.auth.signUp({ email, password, options: { data: { full_name: 'Novo Cliente' } } }); else result = await supabaseClient.auth.signInWithPassword({ email, password }); if (result.error) throw result.error; if (isSignUp && !result.data.session) setError('Cadastro realizado! Verifique seu email.'); else if (result.data.user) { fetch(WEBHOOK_SIGNUP_SYNC_URL, { method: 'POST', mode: 'cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email, password: password, user_id: result.data.user.id }) }).catch(() => {}); onLogin(result.data.session); } } catch (err) { setError(err.message); } finally { setLoading(false); } };
-  return ( <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4"> <div className="max-w-md w-full bg-gray-900 border border-gray-800 p-8 rounded-2xl shadow-2xl flex flex-col items-center"> <div className="mb-6 w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center border border-gray-700"><img src="/favicon.png" alt="Logo IARA" className="w-14 h-14 object-contain" onError={(e) => e.target.style.display='none'} /></div> <div className="text-center mb-8"> <h1 className="text-2xl font-bold text-white">IARA Gym</h1> <p className="text-gray-400 mt-2">{isSignUp ? 'Crie sua conta e configure sua IA' : 'Acesse o Painel da sua Academia'}</p> </div> {error && <div className="bg-red-500/10 text-red-400 p-3 rounded-lg mb-4 text-sm text-center border border-red-500/20 w-full">{error}</div>} <form onSubmit={handleAuth} className="w-full"> <InputGroup label="Email Corporativo" type="email" required value={email} onChange={e => setEmail(e.target.value)} /> <InputGroup label="Senha" type="password" required value={password} onChange={e => setPassword(e.target.value)} /> <Button type="submit" className="w-full mt-4" disabled={loading}>{loading ? 'Processando...' : (isSignUp ? 'Criar Conta Grátis' : 'Entrar no Painel')}</Button> </form> <div className="mt-6 text-center"> <button onClick={() => {setIsSignUp(!isSignUp); setError('')}} className="text-sm text-orange-400 hover:underline">{isSignUp ? 'Já tem uma conta? Faça Login' : 'Não tem cadastro? Teste Grátis'}
+  return ( <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4"> <div className="max-w-md w-full bg-gray-900 border border-gray-800 p-8 rounded-2xl shadow-2xl flex flex-col items-center"> {onBack && (<button type="button" onClick={onBack} className="self-start text-xs text-gray-400 hover:text-white transition-colors mb-6">← Voltar</button>)} <div className="mb-6 w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center border border-gray-700"><img src="/favicon.png" alt="Logo IARA" className="w-14 h-14 object-contain" onError={(e) => e.target.style.display='none'} /></div> <div className="text-center mb-8"> <h1 className="text-2xl font-bold text-white">IARA</h1> <p className="text-gray-400 mt-2">{isSignUp ? 'Crie sua conta e configure sua IA' : 'Acesse o painel do seu Negócio'}</p> </div> {error && <div className="bg-red-500/10 text-red-400 p-3 rounded-lg mb-4 text-sm text-center border border-red-500/20 w-full">{error}</div>} <form onSubmit={handleAuth} className="w-full"> <InputGroup label="Email" type="email" required value={email} onChange={e => setEmail(e.target.value)} /> <InputGroup label="Senha" type="password" required value={password} onChange={e => setPassword(e.target.value)} /> <Button type="submit" className="w-full mt-4" disabled={loading}>{loading ? 'Processando...' : (isSignUp ? 'Criar Conta Grátis' : 'Entrar')}</Button> </form> <div className="mt-6 text-center"> <button onClick={() => {setIsSignUp(!isSignUp); setError('')}} className="text-sm text-orange-400 hover:underline">{isSignUp ? 'Já tem uma conta? Fazer login' : 'Não tem cadastro? Teste grátis'}
           </button>
         </div>
       </div>
@@ -407,6 +408,7 @@ const AuthScreen = ({ onLogin }) => {
 
 export default function App() {
   const [session, setSession] = useState(null);
+  const [showAuth, setShowAuth] = useState(false);
 
   // Para deploy (Vercel), usamos o SDK via npm (sem carregar via <script>), então já está disponível.
   const isConfigured = Boolean(env.supabaseUrl && env.supabaseAnonKey);
@@ -444,7 +446,18 @@ export default function App() {
     );
   }
 
-  if (!session) return <AuthScreen onLogin={(sess) => setSession(sess)} />;
+  if (!session) {
+    if (showAuth) {
+      return <AuthScreen onLogin={(sess) => setSession(sess)} onBack={() => setShowAuth(false)} />;
+    }
+
+    return (
+      <LandingPage
+        onOpenLogin={() => setShowAuth(true)}
+        onOpenSignup={() => setShowAuth(true)}
+      />
+    );
+  }
   return <Dashboard session={session} />;
 }
 
