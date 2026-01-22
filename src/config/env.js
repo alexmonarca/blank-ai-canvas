@@ -14,6 +14,6 @@ export const env = {
   // n8n (webhook público) - acionado a cada mensagem do usuário na tela inicial
   n8nAiWebhookUrl:
     import.meta.env.VITE_N8N_AI_WEBHOOK_URL ??
-    "https://webhook.monarcahub.com/webhook/treinar_ia",
+    "https://webhook.monarcahub.com/webhook/ensinar_ia",
 };
 
