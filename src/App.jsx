@@ -837,10 +837,30 @@ export default function App() {
   const isConfigured = Boolean(env.supabaseUrl && env.supabaseAnonKey);
 
   // Script FB SDK e Chatwoot
+  // - Deslogado (página inicial): expanded_bubble + "Converse com a IARA"
+  // - Logado (plataforma): padrão, sem texto (mais discreto)
   useEffect(() => {
+    const isLanding = !session;
+
+    window.chatwootSettings = {
+      position: "right",
+      type: isLanding ? "expanded_bubble" : "standard",
+      launcherTitle: isLanding ? "Converse com a IARA" : "",
+    };
+
+    const existing = document.getElementById("chatwoot-sdk");
+    if (existing) {
+      // Se o SDK já está carregado, reaplica config (ex.: após login)
+      if (window.chatwootSDK) {
+        window.chatwootSDK.run({ websiteToken: CHATWOOT_TOKEN, baseUrl: CHATWOOT_BASE_URL });
+      }
+      return;
+    }
+
     (function (d, t) {
       var g = d.createElement(t),
         s = d.getElementsByTagName(t)[0];
+      g.id = "chatwoot-sdk";
       g.src = CHATWOOT_BASE_URL + "/packs/js/sdk.js";
       g.defer = true;
       g.async = true;
@@ -851,7 +871,7 @@ export default function App() {
         }
       };
     })(document, "script");
-  }, []);
+  }, [session]);
 
   useEffect(() => {
     if (!isConfigured) return;
