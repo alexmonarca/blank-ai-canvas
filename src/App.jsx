@@ -80,7 +80,7 @@ const TUTORIAL_VIDEO_ID = "2rgyPJzZXQg";
 
 // Webhooks do n8n
 const WEBHOOK_SALES_URL = "https://webhook.monarcahub.com/webhook/assinar";
-const WEBHOOK_EVOLUTION_URL = "https://webhook.monarcahub.com/webhook/evolution-manager";
+const WEBHOOK_EVOLUTION_URL = "https://webhook.monarcahub.com/webhook/evo-manager-v4all";
 const WEBHOOK_QR_HTML_URL = "https://webhook.monarcahub.com/webhook/qrcode";
 const WEBHOOK_SIGNUP_SYNC_URL = "https://webhook.monarcahub.com/webhook/signup-sync";
 
@@ -655,9 +655,9 @@ const VideoModal = ({ isOpen, onClose, videoId }) => {
         {" "}
         <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-gray-800/50">
           {" "}
-           <h3 className="text-white font-bold flex items-center gap-2">
-             <PlayCircle className="w-5 h-5 text-blue-400" /> Tutorial IARA
-           </h3>{" "}
+          <h3 className="text-white font-bold flex items-center gap-2">
+            <PlayCircle className="w-5 h-5 text-blue-400" /> Tutorial IARA Gym
+          </h3>{" "}
           <button onClick={onClose} className="text-gray-400 hover:text-white bg-gray-700 p-1 rounded-full">
             <X className="w-5 h-5" />
           </button>{" "}
@@ -789,20 +789,19 @@ const AuthScreen = ({ onLogin, initialMode = "login", onBackToLanding }) => {
             className="flex items-center gap-2"
             aria-label="Ir para a página inicial"
           >
-             <div className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center border border-gray-700 overflow-hidden">
-               <img
-                 src="/logo-iara.png"
-                 alt="Logo IARA"
-                 className="w-9 h-9 object-contain"
-                 onError={(e) => (e.target.style.display = "none")}
-               />
-             </div>
+            <div className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center border border-gray-700 overflow-hidden">
+              <img
+                src="/favicon.png"
+                alt="Logo IARA"
+                className="w-7 h-7 object-contain"
+                onError={(e) => (e.target.style.display = "none")}
+              />
+            </div>
             <span className="text-white font-bold">IARA</span>
           </button>
 
           <div className="w-10 h-10" aria-hidden="true" />
         </div>
-
         <div className="text-center mb-8">
           <p className="text-gray-400 mt-2">
             {isSignUp ? "Crie sua conta e configure sua IA" : "Acesse o painel do seu Negócio"}
@@ -917,12 +916,7 @@ export default function App() {
 
   if (!session) {
     if (authView === "landing") {
-      return (
-        <LandingPage
-          onOpenLogin={() => setAuthView("login")}
-          onOpenSignup={() => setAuthView("signup")}
-        />
-      );
+      return <LandingPage onOpenLogin={() => setAuthView("login")} onOpenSignup={() => setAuthView("signup")} />;
     }
 
     return (
@@ -1318,14 +1312,12 @@ function Dashboard({ session }) {
           if (data.extra_channels_count) setExtraChannels(data.extra_channels_count);
           if (data.extra_users_count) setGymData((prev) => ({ ...prev, extra_users_count: data.extra_users_count }));
         } else {
-          await supabaseClient
-            .from("gym_configs")
-            .insert({
-              user_id: userId,
-              email: session.user.email,
-              ai_active: false,
-              connection_status: "disconnected",
-            });
+          await supabaseClient.from("gym_configs").insert({
+            user_id: userId,
+            email: session.user.email,
+            ai_active: false,
+            connection_status: "disconnected",
+          });
           setConnectionStatus("disconnected");
           setConnectionStep("disconnected");
           setInitialGymData(gymData);
@@ -2417,7 +2409,7 @@ function Dashboard({ session }) {
         <div className="p-6 flex items-center gap-2 font-bold text-2xl text-orange-400 tracking-tighter">
           <img
             src="/logo-iara.png"
-            alt="Logo IARA"
+            alt="IARA Gym"
             className="h-10 object-contain"
             onError={(e) => {
               e.target.style.display = "none";
@@ -2494,7 +2486,7 @@ function Dashboard({ session }) {
       {/* Mobile Header */}
       <div className="md:hidden bg-gray-900 p-4 border-b border-gray-800 flex justify-between items-center sticky top-0 z-40">
         <div className="flex items-center gap-2 font-bold text-xl text-orange-400">
-          <img src="/logo-iara.png" className="h-8" alt="Logo IARA" /> IARA
+          <img src="/logo-iara.png" className="h-8" alt="IARA Gym" /> IARA Gym
         </div>
         <button className="text-gray-300 p-2" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
           {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -2506,7 +2498,7 @@ function Dashboard({ session }) {
         <div className="md:hidden fixed inset-0 z-50 bg-gray-950 animate-in fade-in duration-200">
           <div className="p-4 border-b border-gray-800 flex justify-between items-center bg-gray-900">
             <div className="flex items-center gap-2 font-bold text-xl text-orange-400">
-              <img src="/logo-iara.png" className="h-8" alt="Logo IARA" /> IARA
+              <img src="/logo-iara.png" className="h-8" alt="IARA Gym" /> IARA Gym
             </div>
             <button className="text-gray-300 p-2" onClick={() => setMobileMenuOpen(false)}>
               <X className="w-6 h-6" />
