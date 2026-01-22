@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { ChevronDown, ChevronUp, MessageSquareText } from "lucide-react";
+import { ChevronDown, ChevronUp, MessageSquare } from "lucide-react";
 
 function formatTime(iso) {
   if (!iso) return "";
@@ -100,7 +100,7 @@ export default function ConversationLogsCard({
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <MessageSquareText className="w-4 h-4 text-primary" />
+                  <MessageSquare className="w-4 h-4 text-primary" />
                   <div className="text-sm font-medium text-foreground">Painel Omnichannel</div>
                 </div>
                 <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
