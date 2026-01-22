@@ -4,6 +4,7 @@ import AdminTrialPanel from "./components/admin/AdminTrialPanel.jsx";
 import HomeAIStart from "./components/HomeAIStart.jsx";
 import ConnectionsPage from "./components/ConnectionsPage.jsx";
 import MidiasPage from "./components/MidiasPage.jsx";
+import LandingPage from "./components/LandingPage.jsx";
 import { supabase as supabaseClient } from "@/lib/supabaseClient";
 import { env } from "@/config/env";
 import {
@@ -63,6 +64,7 @@ import {
   Tag,
   Facebook,
   Gift,
+  ArrowLeft,
 } from "lucide-react";
 
 // ==========================================
@@ -727,10 +729,10 @@ const OnboardingStepsModal = ({
 // ==========================================
 // AUTH SCREEN
 // ==========================================
-const AuthScreen = ({ onLogin }) => {
+const AuthScreen = ({ onLogin, initialMode = "login", onBackToLanding }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(initialMode === "signup");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const handleAuth = async (e) => {
@@ -770,24 +772,42 @@ const AuthScreen = ({ onLogin }) => {
   };
   return (
     <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
-      {" "}
       <div className="max-w-md w-full bg-gray-900 border border-gray-800 p-8 rounded-2xl shadow-2xl flex flex-col items-center">
-        {" "}
-        <div className="mb-6 w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center border border-gray-700">
-          <img
-            src="/favicon.png"
-            alt="Logo IARA"
-            className="w-14 h-14 object-contain"
-            onError={(e) => (e.target.style.display = "none")}
-          />
-        </div>{" "}
+        <div className="w-full flex items-center justify-between mb-6">
+          <button
+            type="button"
+            onClick={onBackToLanding}
+            className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700"
+            aria-label="Voltar para a página inicial"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+
+          <button
+            type="button"
+            onClick={onBackToLanding}
+            className="flex items-center gap-2"
+            aria-label="Ir para a página inicial"
+          >
+            <div className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center border border-gray-700 overflow-hidden">
+              <img
+                src="/favicon.png"
+                alt="Logo IARA"
+                className="w-7 h-7 object-contain"
+                onError={(e) => (e.target.style.display = "none")}
+              />
+            </div>
+            <span className="text-white font-bold">IARA</span>
+          </button>
+
+          <div className="w-10 h-10" aria-hidden="true" />
+        </div>
+
         <div className="text-center mb-8">
-          {" "}
-          <h1 className="text-2xl font-bold text-white">IARA Gym</h1>{" "}
           <p className="text-gray-400 mt-2">
-            {isSignUp ? "Crie sua conta e configure sua IA" : "Acesse o Painel da sua Academia"}
-          </p>{" "}
-        </div>{" "}
+            {isSignUp ? "Crie sua conta e configure sua IA" : "Acesse o painel do seu Negócio"}
+          </p>
+        </div>
         {error && (
           <div className="bg-red-500/10 text-red-400 p-3 rounded-lg mb-4 text-sm text-center border border-red-500/20 w-full">
             {error}
@@ -832,6 +852,7 @@ const AuthScreen = ({ onLogin }) => {
 
 export default function App() {
   const [session, setSession] = useState(null);
+  const [authView, setAuthView] = useState("landing");
 
   // Para deploy (Vercel), usamos o SDK via npm (sem carregar via <script>), então já está disponível.
   const isConfigured = Boolean(env.supabaseUrl && env.supabaseAnonKey);
@@ -840,12 +861,14 @@ export default function App() {
   // - Deslogado (página inicial): expanded_bubble + "Converse com a IARA"
   // - Logado (plataforma): padrão, sem texto (mais discreto)
   useEffect(() => {
-    const isLanding = !session;
+    // Apenas na landing (marketing): expanded_bubble + título
+    // Em login/cadastro e dentro da plataforma: balão padrão, sem texto
+    const isMarketingLanding = !session && authView === "landing";
 
     window.chatwootSettings = {
       position: "right",
-      type: isLanding ? "expanded_bubble" : "standard",
-      launcherTitle: isLanding ? "Converse com a IARA" : "",
+      type: isMarketingLanding ? "expanded_bubble" : "standard",
+      launcherTitle: isMarketingLanding ? "Converse com a IARA" : "",
     };
 
     const existing = document.getElementById("chatwoot-sdk");
@@ -871,7 +894,7 @@ export default function App() {
         }
       };
     })(document, "script");
-  }, [session]);
+  }, [session, authView]);
 
   useEffect(() => {
     if (!isConfigured) return;
@@ -892,7 +915,24 @@ export default function App() {
     );
   }
 
-  if (!session) return <AuthScreen onLogin={(sess) => setSession(sess)} />;
+  if (!session) {
+    if (authView === "landing") {
+      return (
+        <LandingPage
+          onOpenLogin={() => setAuthView("login")}
+          onOpenSignup={() => setAuthView("signup")}
+        />
+      );
+    }
+
+    return (
+      <AuthScreen
+        initialMode={authView}
+        onBackToLanding={() => setAuthView("landing")}
+        onLogin={(sess) => setSession(sess)}
+      />
+    );
+  }
   return <Dashboard session={session} />;
 }
 
