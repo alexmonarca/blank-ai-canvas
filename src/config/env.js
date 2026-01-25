@@ -15,5 +15,10 @@ export const env = {
   n8nAiWebhookUrl:
     import.meta.env.VITE_N8N_AI_WEBHOOK_URL ??
     "https://webhook.monarcahub.com/webhook/ensinar_ia",
+
+  // Retenção (disparos em massa)
+  retentionMassWebhookUrl:
+    import.meta.env.VITE_RETENTION_MASS_WEBHOOK_URL ??
+    "https://webhook.monarcahub.com/webhook/retencao-disparos",
 };
 
