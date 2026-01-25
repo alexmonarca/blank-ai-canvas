@@ -159,7 +159,10 @@ const normalizePhone = (raw) => {
 
 const parseContactsFromText = (rawText) => {
   const text = String(rawText ?? "");
-  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  const lines = text
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
 
   // Limite de segurança para não explodir payload / UX
   const limited = lines.slice(0, 500);
@@ -1002,7 +1005,6 @@ function Dashboard({ session }) {
   const [coupon, setCoupon] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponError, setCouponError] = useState("");
-  const [savedCoupon, setSavedCoupon] = useState(null);
   // NOVO: Desconto por Gamificação
   const [onboardingDiscount, setOnboardingDiscount] = useState(0);
 
@@ -1030,13 +1032,7 @@ function Dashboard({ session }) {
 
     // Regra: cupom só vale para compras acima de R$ 250 (valor do plano sem descontos).
     // Obs: aqui não consideramos descontos (cupom/onboarding) na elegibilidade.
-    const totalWithoutDiscounts = calculateTotal(
-      gymData,
-      extraChannels,
-      gymData.extra_users_count,
-      0,
-      0,
-    );
+    const totalWithoutDiscounts = calculateTotal(gymData, extraChannels, gymData.extra_users_count, 0, 0);
 
     if (!amount) {
       setAppliedCoupon(null);
@@ -1092,8 +1088,6 @@ function Dashboard({ session }) {
     instagram_status: "disconnected",
   });
   const [initialGymData, setInitialGymData] = useState(null);
-  // CRÍTICO: Bloquear autosaves enquanto dados estão carregando
-  const [isDataLoaded, setIsDataLoaded] = useState(false);
   const isTrialExpired = trialInfo.status === "expired" && subscriptionInfo.plan_type === "trial_7_days";
   const forcedTrialPauseRef = useRef(false);
 
@@ -1107,7 +1101,7 @@ function Dashboard({ session }) {
     try {
       // Força IA pausada no banco (n8n depende disso)
       setGymData((prev) => ({ ...prev, ai_active: false }));
-      await handlePartialSave({ ai_active: false });
+      await handleSave({ ...gymData, ai_active: false });
 
       // (Opcional) se estiver conectado via MonarcaHub, desloga para garantir que não rode nada no trial expirado
       if (connectionStatus === "connected") {
@@ -1115,7 +1109,7 @@ function Dashboard({ session }) {
         setConnectionStep("disconnected");
         setGymData((prev) => ({ ...prev, connection_status: "disconnected" }));
         await callEvolutionManager("logout");
-        await handlePartialSave({ ai_active: false, connection_status: "disconnected" });
+        await handleSave({ ...gymData, ai_active: false, connection_status: "disconnected" });
       }
     } catch (e) {
       console.error("Falha ao forçar pausa no trial expirado:", e);
@@ -1221,7 +1215,7 @@ function Dashboard({ session }) {
       if (res) {
         setConnectionStatus("disconnected");
         setConnectionStep("disconnected");
-        handlePartialSave({ connection_status: "disconnected", ai_active: false });
+        handleSave({ ...gymData, connection_status: "disconnected", ai_active: false });
         alert("Desconectado.");
       }
     }
@@ -1231,7 +1225,7 @@ function Dashboard({ session }) {
     if (res && (res.status === "open" || res.status === "connected")) {
       setConnectionStatus("connected");
       setConnectionStep("connected");
-      handlePartialSave({ connection_status: "connected" });
+      handleSave({ ...gymData, connection_status: "connected" });
       alert("Conectado! 🟢");
     } else {
       setConnectionStatus("disconnected");
@@ -1266,7 +1260,7 @@ function Dashboard({ session }) {
         setConnectionStatus("connected");
         setConnectionStep("connected");
         if (isQrModalOpen) setTimeout(() => setIsQrModalOpen(false), 2000);
-        handlePartialSave({ connection_status: "connected" });
+        handleSave({ ...gymData, connection_status: "connected" });
       }
     } catch (e) {
       // silencioso
@@ -1357,7 +1351,6 @@ function Dashboard({ session }) {
   useEffect(() => {
     const fetchData = async () => {
       setIsLoadingData(true);
-      setIsDataLoaded(false);
       try {
         const { data } = await supabaseClient.from("gym_configs").select("*").eq("user_id", userId).maybeSingle();
         if (data) {
@@ -1386,7 +1379,7 @@ function Dashboard({ session }) {
         }
         let sub = await supabaseClient
           .from("subscriptions")
-          .select("plan_type, status, cupom")
+          .select("plan_type, status")
           .eq("user_id", userId)
           .maybeSingle();
         if (!sub.data) {
@@ -1397,11 +1390,6 @@ function Dashboard({ session }) {
         }
         if (sub.data) {
           setSubscriptionInfo(sub.data);
-          if (sub.data.cupom) {
-            const couponCode = sub.data.cupom;
-            const couponAmount = VALID_COUPONS[couponCode] || 0;
-            setSavedCoupon({ code: couponCode, amount: couponAmount });
-          }
         }
         const { data: logData } = await supabaseClient
           .from("interaction_logs")
@@ -1414,37 +1402,10 @@ function Dashboard({ session }) {
         console.error(error);
       } finally {
         setIsLoadingData(false);
-        // Aguarda um tick para garantir que os estados estão sincronizados
-        setTimeout(() => setIsDataLoaded(true), 100);
       }
     };
     fetchData();
   }, [userId, session.user.email]);
-
-  // NOVO: Função para PATCH (atualizar apenas campos específicos)
-  // Evita sobrescrever dados do treinamento durante autosaves de conexão/IA
-  const handlePartialSave = async (fieldsToUpdate) => {
-    // Bloqueia se os dados ainda não carregaram completamente
-    if (!isDataLoaded) {
-      console.warn("Autosave bloqueado: dados ainda não carregados completamente.");
-      return;
-    }
-
-    try {
-      const { error } = await supabaseClient
-        .from("gym_configs")
-        .update({
-          ...fieldsToUpdate,
-          updated_at: new Date(),
-        })
-        .eq("user_id", userId);
-
-      if (error) throw error;
-      console.log("PATCH aplicado com sucesso:", fieldsToUpdate);
-    } catch (error) {
-      console.error("Erro no handlePartialSave:", error);
-    }
-  };
 
   const handleSave = async (customData = null) => {
     const isFullSave = !customData;
@@ -1469,7 +1430,13 @@ function Dashboard({ session }) {
 
         // Disparos (retenção): envia configuração para o webhook SEM travar UX
         // Regra: disponível apenas fora do trial e para total >= R$300
-        const totalNoDiscounts = calculateTotal(customData || gymData, extraChannels, (customData || gymData).extra_users_count, 0, 0);
+        const totalNoDiscounts = calculateTotal(
+          customData || gymData,
+          extraChannels,
+          (customData || gymData).extra_users_count,
+          0,
+          0,
+        );
         const retentionEnabledByPlan =
           isSubscriptionActive(subscriptionInfo?.status) &&
           subscriptionInfo?.plan_type !== "trial_7_days" &&
@@ -1542,7 +1509,7 @@ function Dashboard({ session }) {
     setTrainingError("");
     const newState = !gymData.ai_active;
     setGymData((prev) => ({ ...prev, ai_active: newState }));
-    await handlePartialSave({ ai_active: newState, needs_reprocessing: true });
+    await handleSave({ ...gymData, ai_active: newState });
   };
   const toggleInstagramAI = async () => {
     if (!gymData.ai_active_instagram && extraChannels < 1) {
@@ -1553,7 +1520,7 @@ function Dashboard({ session }) {
     setInstagramError("");
     const newState = !gymData.ai_active_instagram;
     setGymData((prev) => ({ ...prev, ai_active_instagram: newState }));
-    await handlePartialSave({ ai_active_instagram: newState, needs_reprocessing: true });
+    await handleSave({ ...gymData, ai_active_instagram: newState });
   };
 
   // CÁLCULO DE PREÇO (COM DESCONTO ONBOARDING)
@@ -1563,8 +1530,7 @@ function Dashboard({ session }) {
     isSubscriptionActive(subscriptionInfo?.status) &&
     subscriptionInfo?.plan_type !== "trial_7_days" &&
     totalWithoutDiscounts >= MIN_TOTAL_FOR_RETENTION;
-  const couponAmountToApply =
-    appliedCoupon && totalWithoutDiscounts > MIN_TOTAL_FOR_COUPON ? appliedCoupon.amount : 0;
+  const couponAmountToApply = appliedCoupon && totalWithoutDiscounts > MIN_TOTAL_FOR_COUPON ? appliedCoupon.amount : 0;
 
   const totalPrice = calculateTotal(
     gymData,
@@ -1606,19 +1572,6 @@ function Dashboard({ session }) {
       alert("Plano atualizado com sucesso (sem custo adicional).");
       return;
     }
-    
-    if (couponAmountToApply > 0 && appliedCoupon) {
-      try {
-        await supabaseClient
-          .from("subscriptions")
-          .update({ cupom: appliedCoupon.code })
-          .eq("user_id", userId);
-        setSavedCoupon(appliedCoupon);
-      } catch (error) {
-        console.error("Erro ao salvar cupom:", error);
-      }
-    }
-    
     setIsCheckoutOpen(true);
     setCheckoutProcessing(true);
     setCheckoutHtml("");
@@ -1627,7 +1580,7 @@ function Dashboard({ session }) {
       user_id: userId,
       email: session.user.email,
       valor_total: finalCheckoutValue,
-        cupom_aplicado: couponAmountToApply > 0 && appliedCoupon ? appliedCoupon.code : null,
+      cupom_aplicado: couponAmountToApply > 0 && appliedCoupon ? appliedCoupon.code : null,
       desconto_onboarding: onboardingDiscount,
       tipo_pagamento: isActiveSubscriber ? "upgrade" : "new",
       detalhes: {
@@ -1960,13 +1913,13 @@ function Dashboard({ session }) {
                     label="Nome do Negócio (sua marca)"
                     value={gymData.gym_name}
                     onChange={(e) => setGymData({ ...gymData, gym_name: e.target.value })}
-                    helpText="Como a IA deve chamar sua academia nas mensagens."
+                    helpText="Como a IA deve chamar seu negócio nas mensagens."
                   />
                   <InputGroup
                     label="Telefone / WhatsApp"
                     value={gymData.phone}
                     onChange={(e) => setGymData({ ...gymData, phone: e.target.value })}
-                    helpText="O número oficial que os alunos entram em contato."
+                    helpText="O número oficial que os clientes entram em contato."
                   />
                 </div>
                 <InputGroup
@@ -2168,9 +2121,9 @@ function Dashboard({ session }) {
                         </div>
                         <div className="bg-yellow-500/10 border border-yellow-500/20 p-3 rounded text-xs text-yellow-200">
                           <span className="font-bold block mb-1">Atenção:</span>Os disparos podem começar em até 24
-                          horas após essa configuração. Chame no WhatsApp do Suporte caso precise fazer ajuste manual
-                          ou se deseja pausar os disparos fora da programação estabelecida por exemplo. Estamos aqui
-                          para ajudar!
+                          horas após essa configuração. Chame no WhatsApp do Suporte caso precise fazer ajuste manual ou
+                          se deseja pausar os disparos fora da programação estabelecida por exemplo. Estamos aqui para
+                          ajudar!
                         </div>
                       </div>
                     )}
@@ -2236,21 +2189,9 @@ function Dashboard({ session }) {
                       </ul>
                     </div>
                   ) : (
-                    <div className="mt-2 pt-2 border-t border-gray-700">
-                      <div className="flex justify-between mb-2">
+                    <div className="flex justify-between mt-2 pt-2 border-t border-gray-700">
                       <span className="text-white font-bold">Total Estimado</span>
-                        <span className="text-orange-400 font-bold">
-                          R$ {savedCoupon ? Math.max(0, totalPrice - savedCoupon.amount) : totalPrice}
-                        </span>
-                      </div>
-                      {savedCoupon && (
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-500/10 border border-green-500/30 rounded-lg">
-                          <Tag className="w-3.5 h-3.5 text-green-400" />
-                          <span className="text-xs font-semibold text-green-400">
-                            Cupom {savedCoupon.code}: -R$ {savedCoupon.amount}
-                          </span>
-                        </div>
-                      )}
+                      <span className="text-orange-400 font-bold">R$ {totalPrice}</span>
                     </div>
                   )}
                 </div>
@@ -2278,18 +2219,8 @@ function Dashboard({ session }) {
               <div className="bg-gray-800 border border-orange-500/30 rounded-2xl p-8 text-center h-fit">
                 <p className="text-gray-400 text-sm uppercase tracking-wide">Total Mensal Estimado</p>
                 <div className="flex items-center justify-center text-white mt-2">
-                  <span className="text-5xl font-bold tracking-tight">
-                    R$ {savedCoupon ? Math.max(0, totalPrice - savedCoupon.amount) : totalPrice}
-                  </span>
+                  <span className="text-5xl font-bold tracking-tight">R$ {totalPrice}</span>
                 </div>
-                {savedCoupon && (
-                  <div className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/30 rounded-lg">
-                    <Tag className="w-4 h-4 text-green-400" />
-                    <span className="text-sm font-semibold text-green-400">
-                      Cupom {savedCoupon.code} ativo: -R$ {savedCoupon.amount}
-                    </span>
-                  </div>
-                )}
                 {/* LISTA DE INCLUSOS NO PLANO BASE */}
                 <ul className="mt-4 space-y-2 text-xs text-gray-400 border-t border-gray-700 pt-4 mb-4 text-left">
                   <li className="flex gap-2">
@@ -2381,17 +2312,6 @@ function Dashboard({ session }) {
                     </p>
                   )}
                   {couponError && <p className="text-xs text-red-400 mb-2">{couponError}</p>}
-                  {savedCoupon && !appliedCoupon && (
-                    <div className="mt-2 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-                      <div className="flex items-center gap-2 text-green-400 text-xs font-semibold">
-                        <Tag className="w-3 h-3" />
-                        <span>Cupom {savedCoupon.code} permanente ativo</span>
-                      </div>
-                      <p className="text-xs text-gray-400 mt-1">
-                        Desconto de R$ {savedCoupon.amount} aplicado em todas as mensalidades
-                      </p>
-                    </div>
-                  )}
                 </div>
 
                 <Button
