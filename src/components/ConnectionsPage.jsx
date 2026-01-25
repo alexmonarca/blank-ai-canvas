@@ -11,7 +11,6 @@ import {
   Instagram as InstagramIcon,
 } from "lucide-react";
 
-import ConversationLogsCard from "@/components/ConversationLogsCard";
 
 function StatusBadge({ connected, labelConnected = "Online", labelDisconnected = "Offline" }) {
   return (
@@ -174,8 +173,6 @@ export default function ConnectionsPage({
             </div>
           </div>)}
         </div>
-
-        <ConversationLogsCard limit={10} onOpenPlans={onOpenPlansTab} />
 
         <div className="rounded-3xl border border-border bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/50 shadow-[0_0_0_1px_hsl(var(--border))]">
           <div className="p-5 border-b border-border">

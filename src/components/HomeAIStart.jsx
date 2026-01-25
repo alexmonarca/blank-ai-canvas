@@ -10,6 +10,7 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
+import RecentConversationsTeaser from "@/components/RecentConversationsTeaser";
 
 /**
  * Primeira tela (estilo Gemini/Lovable): pergunta + input central.
@@ -348,6 +349,8 @@ export default function HomeAIStart({
     // níveis: Trial < Start < Premium
     return "trial";
   }, [planName]);
+
+  const shouldShowRecentConversationsTeaser = planTier !== "premium";
 
   const availableModels = useMemo(() => {
     if (planTier === "premium") return ["Trial", "Start", "Premium"];
@@ -760,6 +763,10 @@ export default function HomeAIStart({
             {/* Observação: mensagens técnicas de deploy (Vercel/env) não devem aparecer para o usuário final */}
           </div>
         </div>
+
+        {shouldShowRecentConversationsTeaser && (
+          <RecentConversationsTeaser onOpenPlans={onOpenPlansTab} />
+        )}
 
         {isUpgradeModalOpen && (
           <div
