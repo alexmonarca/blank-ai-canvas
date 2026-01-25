@@ -1002,6 +1002,7 @@ function Dashboard({ session }) {
   const [coupon, setCoupon] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponError, setCouponError] = useState("");
+  const [savedCoupon, setSavedCoupon] = useState(null);
   // NOVO: Desconto por Gamificação
   const [onboardingDiscount, setOnboardingDiscount] = useState(0);
 
@@ -1382,7 +1383,7 @@ function Dashboard({ session }) {
         }
         let sub = await supabaseClient
           .from("subscriptions")
-          .select("plan_type, status")
+          .select("plan_type, status, cupom")
           .eq("user_id", userId)
           .maybeSingle();
         if (!sub.data) {
@@ -1393,6 +1394,11 @@ function Dashboard({ session }) {
         }
         if (sub.data) {
           setSubscriptionInfo(sub.data);
+          if (sub.data.cupom) {
+            const couponCode = sub.data.cupom;
+            const couponAmount = VALID_COUPONS[couponCode] || 0;
+            setSavedCoupon({ code: couponCode, amount: couponAmount });
+          }
         }
         const { data: logData } = await supabaseClient
           .from("interaction_logs")
@@ -1570,6 +1576,19 @@ function Dashboard({ session }) {
       alert("Plano atualizado com sucesso (sem custo adicional).");
       return;
     }
+    
+    if (couponAmountToApply > 0 && appliedCoupon) {
+      try {
+        await supabaseClient
+          .from("subscriptions")
+          .update({ cupom: appliedCoupon.code })
+          .eq("user_id", userId);
+        setSavedCoupon(appliedCoupon);
+      } catch (error) {
+        console.error("Erro ao salvar cupom:", error);
+      }
+    }
+    
     setIsCheckoutOpen(true);
     setCheckoutProcessing(true);
     setCheckoutHtml("");
@@ -2217,8 +2236,18 @@ function Dashboard({ session }) {
               <div className="bg-gray-800 border border-orange-500/30 rounded-2xl p-8 text-center h-fit">
                 <p className="text-gray-400 text-sm uppercase tracking-wide">Total Mensal Estimado</p>
                 <div className="flex items-center justify-center text-white mt-2">
-                  <span className="text-5xl font-bold tracking-tight">R$ {totalPrice}</span>
+                  <span className="text-5xl font-bold tracking-tight">
+                    R$ {savedCoupon ? Math.max(0, totalPrice - savedCoupon.amount) : totalPrice}
+                  </span>
                 </div>
+                {savedCoupon && (
+                  <div className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/30 rounded-lg">
+                    <Tag className="w-4 h-4 text-green-400" />
+                    <span className="text-sm font-semibold text-green-400">
+                      Cupom {savedCoupon.code} ativo: -R$ {savedCoupon.amount}
+                    </span>
+                  </div>
+                )}
                 {/* LISTA DE INCLUSOS NO PLANO BASE */}
                 <ul className="mt-4 space-y-2 text-xs text-gray-400 border-t border-gray-700 pt-4 mb-4 text-left">
                   <li className="flex gap-2">
@@ -2310,6 +2339,17 @@ function Dashboard({ session }) {
                     </p>
                   )}
                   {couponError && <p className="text-xs text-red-400 mb-2">{couponError}</p>}
+                  {savedCoupon && !appliedCoupon && (
+                    <div className="mt-2 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                      <div className="flex items-center gap-2 text-green-400 text-xs font-semibold">
+                        <Tag className="w-3 h-3" />
+                        <span>Cupom {savedCoupon.code} permanente ativo</span>
+                      </div>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Desconto de R$ {savedCoupon.amount} aplicado em todas as mensalidades
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <Button
