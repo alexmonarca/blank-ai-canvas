@@ -1781,6 +1781,7 @@ function Dashboard({ session }) {
             planName={displayPlanName === "Trial Grátis" ? "Plano GRATUITO" : displayPlanName}
             isTrialPlan={displayPlanName === "Trial Grátis" || subscriptionInfo?.plan_type === "trial_7_days"}
             wantsOfficialApi={Boolean(gymData.use_official_api_coexistencia || gymData.use_official_api_somente)}
+            extraChannels={extraChannels}
             onOpenPlansTab={() => setActiveTab("plans")}
             onOpenWhatsAppConnectUnofficial={handleConnectNewNumber}
             whatsappUnofficialStatus={connectionStatus}

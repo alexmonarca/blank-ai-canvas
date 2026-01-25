@@ -9,6 +9,7 @@ import {
   ChevronDown,
   ChevronUp,
   Instagram as InstagramIcon,
+  Lock,
 } from "lucide-react";
 
 
@@ -48,6 +49,9 @@ export default function ConnectionsPage({
   wantsOfficialApi,
   onOpenPlansTab,
 
+  // Extras (Assinatura)
+  extraChannels = 0,
+
   // WhatsApp (MonarcaHub)
   onOpenWhatsAppConnectUnofficial,
   whatsappUnofficialStatus,
@@ -84,6 +88,8 @@ export default function ConnectionsPage({
   const openInstagramConnect = () => {
     onOpenWhatsAppConnectOfficial?.();
   };
+
+  const instagramUnlocked = Number(extraChannels || 0) >= 1;
 
   const checklist = useMemo(() => {
     const steps = [];
@@ -131,8 +137,10 @@ export default function ConnectionsPage({
         </div>
       </header>
 
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="rounded-3xl border border-border bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/50 shadow-[0_0_0_1px_hsl(var(--border))] overflow-hidden h-fit">
+      <section className="flex flex-col lg:flex-row gap-6">
+        {/* Coluna esquerda (masonry simples): tutorial + instagram */}
+        <div className="flex flex-col gap-6 lg:w-1/2">
+        <div className="rounded-3xl border border-border bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/50 shadow-[0_0_0_1px_hsl(var(--border))] overflow-hidden">
           <div className="p-5 border-b border-border">
             <div className="flex items-center justify-between gap-3 cursor-pointer" onClick={() => setTutorialCollapsed(!tutorialCollapsed)}>
               <div className="min-w-0">
@@ -174,6 +182,52 @@ export default function ConnectionsPage({
           </div>)}
         </div>
 
+        <div className="rounded-3xl border border-border bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/50 shadow-[0_0_0_1px_hsl(var(--border))]">
+          <div className="p-5 border-b border-border flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h2 className="text-lg font-semibold text-foreground">Instagram</h2>
+              <p className="mt-1 text-xs text-muted-foreground">Conecte e gerencie seu canal de Direct.</p>
+            </div>
+            {!instagramUnlocked && (
+              <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border bg-muted/30 text-muted-foreground border-border">
+                <Lock className="w-3.5 h-3.5" /> Bloqueado
+              </span>
+            )}
+          </div>
+          <div className="p-5 space-y-3">
+            <div className="rounded-2xl border border-border bg-background/40 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <InstagramIcon className="w-4 h-4 text-primary" />
+                  <div className="text-sm font-medium text-foreground">Instagram API (Meta)</div>
+                </div>
+                <StatusBadge connected={false} />
+              </div>
+              <div className="mt-2 text-xs text-muted-foreground leading-relaxed">
+                {instagramUnlocked
+                  ? "Conecte o Instagram via API Oficial da Meta para gerenciar mensagens diretas."
+                  : "Para liberar o Instagram, vá em Assinatura → Adicionais → Canais Extras e selecione 1 ou mais."}
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={instagramUnlocked ? openInstagramConnect : undefined}
+                  disabled={!instagramUnlocked}
+                  className="h-10 px-4 rounded-full border border-border bg-background/40 text-foreground hover:bg-background/60 transition-colors text-sm inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                  title={!instagramUnlocked ? 'Disponível ao contratar "Canais Extras" na aba Assinatura' : undefined}
+                >
+                  {!instagramUnlocked && <Lock className="w-4 h-4" />}
+                  Conectar Instagram
+                  <RefreshCw className="w-4 h-4 opacity-70" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        </div>
+
+        {/* Coluna direita */}
+        <div className="lg:w-1/2">
         <div className="rounded-3xl border border-border bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/50 shadow-[0_0_0_1px_hsl(var(--border))]">
           <div className="p-5 border-b border-border">
             <h2 className="text-lg font-semibold text-foreground">WhatsApp</h2>
@@ -270,30 +324,6 @@ export default function ConnectionsPage({
             )}
           </div>
         </div>
-
-        <div className="rounded-3xl border border-border bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/50 shadow-[0_0_0_1px_hsl(var(--border))]">
-          <div className="p-5 border-b border-border">
-            <h2 className="text-lg font-semibold text-foreground">Instagram</h2>
-            <p className="mt-1 text-xs text-muted-foreground">Conecte e gerencie seu canal de Direct.</p>
-          </div>
-          <div className="p-5 space-y-3">
-            <div className="rounded-2xl border border-border bg-background/40 p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <InstagramIcon className="w-4 h-4 text-primary" />
-                  <div className="text-sm font-medium text-foreground">Instagram API (Meta)</div>
-                </div>
-                <StatusBadge connected={false} />
-              </div>
-              <div className="mt-2 text-xs text-muted-foreground leading-relaxed">Conecte o Instagram via API Oficial da Meta para gerenciar mensagens diretas.</div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <button type="button" onClick={openInstagramConnect} className="h-10 px-4 rounded-full border border-border bg-background/40 text-foreground hover:bg-background/60 transition-colors text-sm inline-flex items-center gap-2">
-                  Conectar Instagram
-                  <RefreshCw className="w-4 h-4 opacity-70" />
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
