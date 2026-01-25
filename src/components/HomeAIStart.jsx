@@ -650,7 +650,7 @@ export default function HomeAIStart({
                      </button>
 
                      {modelMenuOpen && (
-                       <div className="absolute right-0 mt-2 w-48 rounded-2xl border border-border bg-card shadow-xl overflow-hidden z-100">
+                       <div className="absolute right-0 mt-2 w-48 rounded-2xl border border-border bg-card shadow-xl overflow-hidden z-[100]">
                          {allModels.map((model) => {
                            const isAvailable = availableModels.includes(model);
                            const isActive = aiModel === model;
