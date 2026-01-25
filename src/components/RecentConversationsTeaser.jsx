@@ -100,7 +100,7 @@ export default function RecentConversationsTeaser({ onOpenPlans }) {
           <div className="min-w-0">
             <div className="text-sm font-semibold text-foreground">Chat — ver últimas conversas</div>
             <p className="mt-1 text-xs text-muted-foreground">
-              Preview do Painel Omnichannel (somente demonstração). Pausar IA por conversa e Instagram ficam disponíveis no upgrade.
+               Pause IA por conversa e veja Instagram (Preview Painel Omnichannel).
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -111,13 +111,6 @@ export default function RecentConversationsTeaser({ onOpenPlans }) {
             >
               <MessageSquare className="w-4 h-4" />
               Chat - ver últimas conversas
-            </button>
-            <button
-              type="button"
-              onClick={() => onOpenPlans?.()}
-              className="h-10 px-4 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm font-medium"
-            >
-              Ir para Planos
             </button>
           </div>
         </div>
