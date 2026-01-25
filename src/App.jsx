@@ -1092,6 +1092,8 @@ function Dashboard({ session }) {
     instagram_status: "disconnected",
   });
   const [initialGymData, setInitialGymData] = useState(null);
+  // CRÍTICO: Bloquear autosaves enquanto dados estão carregando
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
   const isTrialExpired = trialInfo.status === "expired" && subscriptionInfo.plan_type === "trial_7_days";
   const forcedTrialPauseRef = useRef(false);
 
@@ -1105,7 +1107,7 @@ function Dashboard({ session }) {
     try {
       // Força IA pausada no banco (n8n depende disso)
       setGymData((prev) => ({ ...prev, ai_active: false }));
-      await handleSave({ ...gymData, ai_active: false });
+      await handlePartialSave({ ai_active: false });
 
       // (Opcional) se estiver conectado via MonarcaHub, desloga para garantir que não rode nada no trial expirado
       if (connectionStatus === "connected") {
@@ -1113,7 +1115,7 @@ function Dashboard({ session }) {
         setConnectionStep("disconnected");
         setGymData((prev) => ({ ...prev, connection_status: "disconnected" }));
         await callEvolutionManager("logout");
-        await handleSave({ ...gymData, ai_active: false, connection_status: "disconnected" });
+        await handlePartialSave({ ai_active: false, connection_status: "disconnected" });
       }
     } catch (e) {
       console.error("Falha ao forçar pausa no trial expirado:", e);
@@ -1219,7 +1221,7 @@ function Dashboard({ session }) {
       if (res) {
         setConnectionStatus("disconnected");
         setConnectionStep("disconnected");
-        handleSave({ ...gymData, connection_status: "disconnected", ai_active: false });
+        handlePartialSave({ connection_status: "disconnected", ai_active: false });
         alert("Desconectado.");
       }
     }
@@ -1229,7 +1231,7 @@ function Dashboard({ session }) {
     if (res && (res.status === "open" || res.status === "connected")) {
       setConnectionStatus("connected");
       setConnectionStep("connected");
-      handleSave({ ...gymData, connection_status: "connected" });
+      handlePartialSave({ connection_status: "connected" });
       alert("Conectado! 🟢");
     } else {
       setConnectionStatus("disconnected");
@@ -1264,7 +1266,7 @@ function Dashboard({ session }) {
         setConnectionStatus("connected");
         setConnectionStep("connected");
         if (isQrModalOpen) setTimeout(() => setIsQrModalOpen(false), 2000);
-        handleSave({ ...gymData, connection_status: "connected" });
+        handlePartialSave({ connection_status: "connected" });
       }
     } catch (e) {
       // silencioso
@@ -1355,6 +1357,7 @@ function Dashboard({ session }) {
   useEffect(() => {
     const fetchData = async () => {
       setIsLoadingData(true);
+      setIsDataLoaded(false);
       try {
         const { data } = await supabaseClient.from("gym_configs").select("*").eq("user_id", userId).maybeSingle();
         if (data) {
@@ -1411,10 +1414,37 @@ function Dashboard({ session }) {
         console.error(error);
       } finally {
         setIsLoadingData(false);
+        // Aguarda um tick para garantir que os estados estão sincronizados
+        setTimeout(() => setIsDataLoaded(true), 100);
       }
     };
     fetchData();
   }, [userId, session.user.email]);
+
+  // NOVO: Função para PATCH (atualizar apenas campos específicos)
+  // Evita sobrescrever dados do treinamento durante autosaves de conexão/IA
+  const handlePartialSave = async (fieldsToUpdate) => {
+    // Bloqueia se os dados ainda não carregaram completamente
+    if (!isDataLoaded) {
+      console.warn("Autosave bloqueado: dados ainda não carregados completamente.");
+      return;
+    }
+
+    try {
+      const { error } = await supabaseClient
+        .from("gym_configs")
+        .update({
+          ...fieldsToUpdate,
+          updated_at: new Date(),
+        })
+        .eq("user_id", userId);
+
+      if (error) throw error;
+      console.log("PATCH aplicado com sucesso:", fieldsToUpdate);
+    } catch (error) {
+      console.error("Erro no handlePartialSave:", error);
+    }
+  };
 
   const handleSave = async (customData = null) => {
     const isFullSave = !customData;
@@ -1512,7 +1542,7 @@ function Dashboard({ session }) {
     setTrainingError("");
     const newState = !gymData.ai_active;
     setGymData((prev) => ({ ...prev, ai_active: newState }));
-    await handleSave({ ...gymData, ai_active: newState });
+    await handlePartialSave({ ai_active: newState, needs_reprocessing: true });
   };
   const toggleInstagramAI = async () => {
     if (!gymData.ai_active_instagram && extraChannels < 1) {
@@ -1523,7 +1553,7 @@ function Dashboard({ session }) {
     setInstagramError("");
     const newState = !gymData.ai_active_instagram;
     setGymData((prev) => ({ ...prev, ai_active_instagram: newState }));
-    await handleSave({ ...gymData, ai_active_instagram: newState });
+    await handlePartialSave({ ai_active_instagram: newState, needs_reprocessing: true });
   };
 
   // CÁLCULO DE PREÇO (COM DESCONTO ONBOARDING)
