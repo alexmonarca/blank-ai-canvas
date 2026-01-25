@@ -147,6 +147,41 @@ const calculateTotal = (data, extraChannels, extraUsers, couponDiscount = 0, onb
   return Math.max(0, Math.ceil(total)); // Garante que não fique negativo
 };
 
+// ===============================
+// Retenção (Disparos em massa)
+// ===============================
+const MIN_TOTAL_FOR_RETENTION = 300;
+
+const normalizePhone = (raw) => {
+  const digits = String(raw ?? "").replace(/\D/g, "");
+  return digits;
+};
+
+const parseContactsFromText = (rawText) => {
+  const text = String(rawText ?? "");
+  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+
+  // Limite de segurança para não explodir payload / UX
+  const limited = lines.slice(0, 500);
+
+  const contacts = [];
+
+  for (const line of limited) {
+    // Aceita formatos:
+    // "Nome - 5511999998888" | "Nome, 5511..." | "Nome; 5511..." | "5511..."
+    const parts = line.split(/\s*[-,;|\t]\s*/).filter(Boolean);
+    const maybePhone = parts.length > 1 ? parts[parts.length - 1] : parts[0];
+    const phone = normalizePhone(maybePhone);
+
+    if (!phone || phone.length < 8) continue;
+
+    const name = parts.length > 1 ? parts.slice(0, -1).join(" ").trim() : "";
+    contacts.push({ name: name || null, phone });
+  }
+
+  return contacts;
+};
+
 // ==========================================
 // COMPONENTES VISUAIS (UI)
 // ==========================================
@@ -1045,7 +1080,9 @@ function Dashboard({ session }) {
     ai_active_instagram: false,
     test_number: "",
     mass_sender_active: false,
-    mass_sender_sheet_link: "",
+    // Retenção: agora o usuário informa contatos direto (1 por linha) + mensagem/orientação
+    mass_sender_contacts: "",
+    mass_sender_message: "",
     mass_sender_days: "",
     mass_sender_hours: "",
     mass_sender_interval: "5min",
@@ -1393,6 +1430,48 @@ function Dashboard({ session }) {
         alert("Configurações salvas!");
         createInstanceOnSave();
         setInitialGymData(customData || gymData);
+
+        // Disparos (retenção): envia configuração para o webhook SEM travar UX
+        // Regra: disponível apenas fora do trial e para total >= R$300
+        const totalNoDiscounts = calculateTotal(customData || gymData, extraChannels, (customData || gymData).extra_users_count, 0, 0);
+        const retentionEnabledByPlan =
+          isSubscriptionActive(subscriptionInfo?.status) &&
+          subscriptionInfo?.plan_type !== "trial_7_days" &&
+          totalNoDiscounts >= MIN_TOTAL_FOR_RETENTION;
+
+        if (retentionEnabledByPlan && (customData || gymData).mass_sender_active) {
+          const contacts = parseContactsFromText((customData || gymData).mass_sender_contacts);
+          const message = String((customData || gymData).mass_sender_message ?? "").trim();
+
+          // Validações mínimas para não disparar payload vazio
+          if (contacts.length > 0 && message.length > 0) {
+            const payload = {
+              event: "retention_mass_config_saved",
+              source: "training_tab",
+              user_id: userId,
+              email: session?.user?.email ?? null,
+              contatos: contacts,
+              mensagem: message,
+              dias: String((customData || gymData).mass_sender_days ?? "").trim(),
+              horarios: String((customData || gymData).mass_sender_hours ?? "").trim(),
+              intervalo: String((customData || gymData).mass_sender_interval ?? "").trim(),
+              created_at: new Date().toISOString(),
+            };
+
+            // fire-and-forget
+            fetch(env.retentionMassWebhookUrl, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+              mode: "cors",
+              body: JSON.stringify(payload),
+            }).catch((err) => {
+              console.warn("Falha ao enviar config de retenção:", err);
+            });
+          }
+        }
       }
       if (isFullSave) setTrainingError("");
     } catch (error) {
@@ -1444,6 +1523,10 @@ function Dashboard({ session }) {
   // CÁLCULO DE PREÇO (COM DESCONTO ONBOARDING)
   // Regra: cupom só aplica quando o total sem descontos for > R$ 250.
   const totalWithoutDiscounts = calculateTotal(gymData, extraChannels, gymData.extra_users_count, 0, 0);
+  const retentionUnlocked =
+    isSubscriptionActive(subscriptionInfo?.status) &&
+    subscriptionInfo?.plan_type !== "trial_7_days" &&
+    totalWithoutDiscounts >= MIN_TOTAL_FOR_RETENTION;
   const couponAmountToApply =
     appliedCoupon && totalWithoutDiscounts > MIN_TOTAL_FOR_COUPON ? appliedCoupon.amount : 0;
 
@@ -1982,16 +2065,28 @@ function Dashboard({ session }) {
                       subLabel="Configure o envio automático para sua lista."
                       checked={gymData.mass_sender_active}
                       onChange={(val) => setGymData({ ...gymData, mass_sender_active: val })}
+                      disabled={!retentionUnlocked}
+                      locked={!retentionUnlocked}
+                      onLockedClick={() => setActiveTab("plans")}
                     />
                     {gymData.mass_sender_active && (
                       <div className="mt-4 pl-2 border-l-2 border-blue-500/30 animate-in fade-in">
                         <h5 className="text-sm font-bold text-blue-300 mb-3">Configuração do Disparador em Massa</h5>
                         <InputGroup
-                          label="Link da Planilha de Contatos"
-                          placeholder="Google Sheets (Modo Público)"
-                          value={gymData.mass_sender_sheet_link}
-                          onChange={(e) => setGymData({ ...gymData, mass_sender_sheet_link: e.target.value })}
-                          helpText="Cole aqui o link público da sua planilha."
+                          label="Contatos (nome/telefone, 1 por linha)"
+                          multiline
+                          placeholder={"Ex:\nMaria - 5511999998888\nJoão; 5511988887777"}
+                          value={gymData.mass_sender_contacts}
+                          onChange={(e) => setGymData({ ...gymData, mass_sender_contacts: e.target.value })}
+                          helpText="Você pode colar uma lista de contatos. O sistema normaliza os telefones (somente números)."
+                        />
+                        <InputGroup
+                          label="Mensagem / orientação"
+                          multiline
+                          placeholder="Ex: Olá! Passando para lembrar do seu treino hoje..."
+                          value={gymData.mass_sender_message}
+                          onChange={(e) => setGymData({ ...gymData, mass_sender_message: e.target.value })}
+                          helpText="Esse texto será enviado aos contatos conforme a programação."
                         />
                         <div className="grid grid-cols-2 gap-4">
                           <InputGroup
@@ -2023,9 +2118,9 @@ function Dashboard({ session }) {
                         </div>
                         <div className="bg-yellow-500/10 border border-yellow-500/20 p-3 rounded text-xs text-yellow-200">
                           <span className="font-bold block mb-1">Atenção:</span>Os disparos podem começar em até 24
-                          horas após essa configuração, pois precisamos fazer ajuste manual. Chame no WhatsApp do
-                          Suporte para informar que atualizou sua planilha ou se desejar pausar os disparos fora da
-                          programação estabelecida.
+                          horas após essa configuração. Chame no WhatsApp do Suporte caso precise fazer ajuste manual
+                          ou se deseja pausar os disparos fora da programação estabelecida por exemplo. Estamos aqui
+                          para ajudar!
                         </div>
                       </div>
                     )}
