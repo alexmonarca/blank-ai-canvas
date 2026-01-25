@@ -2236,9 +2236,21 @@ function Dashboard({ session }) {
                       </ul>
                     </div>
                   ) : (
-                    <div className="flex justify-between mt-2 pt-2 border-t border-gray-700">
+                    <div className="mt-2 pt-2 border-t border-gray-700">
+                      <div className="flex justify-between mb-2">
                       <span className="text-white font-bold">Total Estimado</span>
-                      <span className="text-orange-400 font-bold">R$ {totalPrice}</span>
+                        <span className="text-orange-400 font-bold">
+                          R$ {savedCoupon ? Math.max(0, totalPrice - savedCoupon.amount) : totalPrice}
+                        </span>
+                      </div>
+                      {savedCoupon && (
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-500/10 border border-green-500/30 rounded-lg">
+                          <Tag className="w-3.5 h-3.5 text-green-400" />
+                          <span className="text-xs font-semibold text-green-400">
+                            Cupom {savedCoupon.code}: -R$ {savedCoupon.amount}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
