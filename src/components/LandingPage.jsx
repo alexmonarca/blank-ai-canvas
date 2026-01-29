@@ -1,6 +1,7 @@
 import React from "react";
 import { ArrowRight, BrainCircuit, CheckCircle2, Shield, Sparkles } from "lucide-react";
 import PlanBuilder from "./PlanBuilder";
+import WhoWeHelpSection from "./WhoWeHelpSection";
 
 export default function LandingPage({ onOpenLogin, onOpenSignup }) {
   return (
@@ -163,6 +164,8 @@ export default function LandingPage({ onOpenLogin, onOpenSignup }) {
             />
           </div>
         </section>
+
+        <WhoWeHelpSection />
 
         <PlanBuilder onCta={onOpenSignup} />
 
