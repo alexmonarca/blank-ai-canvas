@@ -5,22 +5,36 @@ const BASE_PRICE = 150;
 
 const DEFAULT_OPTIONS = [
   {
-    key: "painel",
-    title: "Painel de Gestão",
-    desc: "Veja todas as conversas e relatórios",
+    key: "secretaria",
+    title: "Secretária",
+    desc: "cuida do atendimento no Whats e Insta",
+    originalPriceLabel: "R$ 1250,00",
+    offerPriceLabel: "R$ 150",
     price: 150,
   },
   {
-    key: "disparador",
-    title: "Disparador em Massa",
-    desc: "Recupere ex-alunos com um clique",
+    key: "vendedor",
+    title: "Vendedor",
+    desc: "A mais alta inteligência em vendas",
+    originalPriceLabel: "R$ 2500,00",
+    offerPriceLabel: "R$ 150",
     price: 150,
   },
   {
-    key: "midias",
-    title: "Gestão de Mídias",
-    desc: "30 créditos para criar artes",
+    key: "designer",
+    title: "Designer",
+    desc: "Artes todos os dias em suas mídias",
+    originalPriceLabel: "R$ 3700",
+    offerPriceLabel: "R$ 250",
     price: 250,
+  },
+  {
+    key: "gestor_midias",
+    title: "Gestor de Mídias",
+    desc: "planeja conteúdo e agenda postagens e legendas",
+    originalPriceLabel: "R$ 1800",
+    offerPriceLabel: "GRÁTIS!",
+    price: 0,
   },
 ];
 
@@ -63,7 +77,7 @@ export default function PlanBuilder({ onCta }) {
                 <div>
                   <div className="text-base font-semibold text-foreground">Plano Base IARA</div>
                   <div className="mt-1 text-sm text-muted-foreground">
-                    WhatsApp Ilimitado + Treinamento Personalizado
+                    IA Treinada + 1 Canal (WhatsApp) + 1 Usuário + Suporte IA e manutenção
                   </div>
                 </div>
                 <div className="text-xl font-semibold text-primary">R$ {BASE_PRICE}</div>
@@ -98,7 +112,10 @@ export default function PlanBuilder({ onCta }) {
                         <div className="mt-0.5 text-xs text-muted-foreground">{opt.desc}</div>
                       </div>
                     </div>
-                    <div className="text-sm font-semibold text-muted-foreground">+ R$ {opt.price}</div>
+                    <div className="text-right">
+                      <div className="text-xs text-muted-foreground line-through">{opt.originalPriceLabel}</div>
+                      <div className="text-sm font-semibold text-foreground">{opt.offerPriceLabel}</div>
+                    </div>
                   </div>
                 </button>
               );
@@ -106,6 +123,9 @@ export default function PlanBuilder({ onCta }) {
           </div>
 
           <div className="rounded-3xl border border-border bg-card/70 p-8 text-center shadow-[0_0_0_1px_hsl(var(--border))] lg:sticky lg:top-24">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              Comece seu teste 100% grátis
+            </p>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
               Investimento Mensal
             </p>
