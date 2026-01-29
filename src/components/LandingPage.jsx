@@ -114,30 +114,7 @@ export default function LandingPage({ onOpenLogin, onOpenSignup }) {
               </div>
             </div>
 
-            <div className="rounded-3xl border border-border bg-card/70 p-6 shadow-[0_0_0_1px_hsl(var(--border))]">
-              <h2 className="text-sm font-semibold text-foreground">O que você configura em minutos</h2>
-              <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
-                <li className="flex gap-2">
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 text-primary flex-shrink-0" />
-                  Atendimento e mensagens (WhatsApp/Instagram)
-                </li>
-                <li className="flex gap-2">
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 text-primary flex-shrink-0" />
-                  Informações do negócio (horários, preços, unidades)
-                </li>
-                <li className="flex gap-2">
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 text-primary flex-shrink-0" />
-                  Rotinas e conteúdo (em breve, com MídIAs)
-                </li>
-              </ul>
-              <button
-                type="button"
-                onClick={onOpenLogin}
-                className="mt-6 inline-flex h-10 w-full items-center justify-center rounded-full border border-border bg-background text-sm font-semibold hover:bg-muted/30 transition-colors"
-              >
-                Já tenho conta
-              </button>
-            </div>
+            <div className="hidden md:block" aria-hidden="true" />
           </div>
         </section>
 
