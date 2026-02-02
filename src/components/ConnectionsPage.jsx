@@ -82,11 +82,15 @@ export default function ConnectionsPage({
   };
 
   const openOfficialConnect = () => {
-    onOpenWhatsAppConnectOfficial?.();
+    onOpenWhatsAppConnectOfficial?.({ mode: "whatsapp" });
   };
 
   const openInstagramConnect = () => {
-    onOpenWhatsAppConnectOfficial?.();
+    onOpenWhatsAppConnectOfficial?.({ mode: "instagram" });
+  };
+
+  const openBothConnect = () => {
+    onOpenWhatsAppConnectOfficial?.({ mode: "both" });
   };
 
   const instagramUnlocked = Number(extraChannels || 0) >= 1;
@@ -278,9 +282,21 @@ export default function ConnectionsPage({
                     onClick={openOfficialConnect}
                     className="h-10 px-4 rounded-full border border-border bg-background/40 text-foreground hover:bg-background/60 transition-colors text-sm inline-flex items-center gap-2"
                   >
-                    Conectar (API Oficial)
+                    Conectar WhatsApp (API Oficial)
                     <RefreshCw className="w-4 h-4 opacity-70" />
                   </button>
+
+                  {instagramUnlocked && (
+                    <button
+                      type="button"
+                      onClick={openBothConnect}
+                      className="h-10 px-4 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm inline-flex items-center gap-2"
+                      title="Conecta WhatsApp + Instagram usando Embedded Signup"
+                    >
+                      Conectar WhatsApp + Instagram
+                      <Globe className="w-4 h-4 opacity-90" />
+                    </button>
+                  )}
                 </div>
               </div>
             ) : (

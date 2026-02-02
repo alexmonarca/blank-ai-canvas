@@ -92,7 +92,13 @@ const WHATSAPP_SALES_NUMBER = "5555996079863";
 
 // Configurações Meta Embedded Signup (API Oficial)
 const META_APP_ID = "1322580525486349";
-const META_CONFIG_ID = "878421224769472";
+// Config IDs (Meta) - Embedded Signup
+// - WhatsApp only
+const META_CONFIG_ID_WHATSAPP = "1772141070125396";
+// - Instagram only
+const META_CONFIG_ID_INSTAGRAM = "1386103829450334";
+// - WhatsApp + Instagram
+const META_CONFIG_ID_BOTH = "878421224769472";
 const WEBHOOK_META_SETUP_URL = "https://webhook.monarcahub.com/webhook/whatsapp-setup";
 
 // ==========================================
@@ -1691,8 +1697,16 @@ function Dashboard({ session }) {
       alert("A API Oficial (somente API) exige o uso do Painel Omnichannel. Ele foi selecionado automaticamente.");
   };
 
-  // META EMBEDDED SIGNUP - API Oficial (WhatsApp e Instagram)
-  const handleMetaEmbeddedSignup = () => {
+  // META EMBEDDED SIGNUP - API Oficial (WhatsApp / Instagram)
+  const handleMetaEmbeddedSignup = ({ mode } = {}) => {
+    const selectedMode = mode || "both";
+    const selectedConfigId =
+      selectedMode === "whatsapp"
+        ? META_CONFIG_ID_WHATSAPP
+        : selectedMode === "instagram"
+          ? META_CONFIG_ID_INSTAGRAM
+          : META_CONFIG_ID_BOTH;
+
     // Verifica se o SDK da Meta já está carregado
     if (!window.FB) {
       alert("Carregando SDK da Meta. Aguarde um momento e tente novamente.");
@@ -1718,14 +1732,31 @@ function Dashboard({ session }) {
     // Inicia o fluxo de login da Meta
     window.FB.login(
       function (response) {
-        if (response.authResponse) {
+        if (!response?.authResponse) {
+          console.log("Conexão Meta cancelada:", response);
+          return;
+        }
+
+        // Parte 3 (Meta): checar status logo após o login
+        window.FB.getLoginStatus(function (statusResponse) {
+          console.log("Meta getLoginStatus:", statusResponse);
+
+          if (statusResponse?.status !== "connected") {
+            alert("⚠️ Login concluído, mas não foi possível confirmar o status como 'connected'. Tente novamente.");
+            return;
+          }
+
           console.log("Sucesso Meta:", response);
+
           // Envia dados para o webhook do n8n
           fetch(WEBHOOK_META_SETUP_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               event: "meta_connected",
+              meta_mode: selectedMode,
+              meta_config_id: selectedConfigId,
+              meta_status: statusResponse?.status,
               user_id: userId,
               email: session?.user?.email,
               access_token: response.authResponse.accessToken,
@@ -1745,12 +1776,10 @@ function Dashboard({ session }) {
               console.error("Erro ao salvar conexão Meta:", err);
               alert("⚠️ Conectado na Meta, mas houve um erro ao sincronizar. Verifique a conexão.");
             });
-        } else {
-          console.log("Conexão Meta cancelada:", response);
-        }
+        });
       },
       {
-        config_id: META_CONFIG_ID,
+        config_id: selectedConfigId,
         response_type: "code",
         override_default_response_type: true,
         extras: {
