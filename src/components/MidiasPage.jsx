@@ -1,5 +1,15 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Image as ImageIcon, Sparkles, Lock, Send } from "lucide-react";
+import {
+  Image as ImageIcon,
+  Sparkles,
+  Lock,
+  Send,
+  Calendar,
+  LayoutTemplate,
+  ImagePlus,
+  CheckCircle2,
+  Clock,
+} from "lucide-react";
 
 export default function MidiasPage({ onOpenPlansTab, hasMediaUpgrade = false }) {
   const [messages, setMessages] = useState([
@@ -44,7 +54,11 @@ export default function MidiasPage({ onOpenPlansTab, hasMediaUpgrade = false }) 
       <header className="mb-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight text-foreground">MídIAs</h1>
+            <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+              Míd
+              <span className="font-extrabold text-primary">IA</span>
+              s
+            </h1>
             <p className="mt-2 text-sm text-muted-foreground">
               IA de Gestão de Mídias (posts, criativos e rotinas).
             </p>
@@ -99,7 +113,7 @@ export default function MidiasPage({ onOpenPlansTab, hasMediaUpgrade = false }) 
 
         <div className="flex flex-col h-[600px]">
           {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-5 space-y-4">
+          <div className="flex-1 overflow-y-auto p-5 space-y-4 chat-scroll">
             {messages.map((msg, idx) => (
               <div
                 key={idx}
@@ -151,9 +165,28 @@ export default function MidiasPage({ onOpenPlansTab, hasMediaUpgrade = false }) 
           <Sparkles className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
           <div className="min-w-0">
             <h3 className="text-sm font-semibold text-foreground">Em breve</h3>
-            <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-              Calendário editorial, templates personalizados, geração automática de criativos e fluxo de aprovação.
-            </p>
+            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div className="flex items-center gap-3 rounded-xl border border-border bg-background/40 px-3 py-2">
+                <Calendar className="h-4 w-4 text-primary flex-shrink-0" />
+                <span className="text-xs text-foreground">Calendário editorial</span>
+              </div>
+              <div className="flex items-center gap-3 rounded-xl border border-border bg-background/40 px-3 py-2">
+                <LayoutTemplate className="h-4 w-4 text-primary flex-shrink-0" />
+                <span className="text-xs text-foreground">Templates personalizados</span>
+              </div>
+              <div className="flex items-center gap-3 rounded-xl border border-border bg-background/40 px-3 py-2">
+                <ImagePlus className="h-4 w-4 text-primary flex-shrink-0" />
+                <span className="text-xs text-foreground">Geração automática de criativos</span>
+              </div>
+              <div className="flex items-center gap-3 rounded-xl border border-border bg-background/40 px-3 py-2">
+                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+                <span className="text-xs text-foreground">Fluxo de aprovação</span>
+              </div>
+              <div className="flex items-center gap-3 rounded-xl border border-border bg-background/40 px-3 py-2 sm:col-span-2">
+                <Clock className="h-4 w-4 text-primary flex-shrink-0" />
+                <span className="text-xs text-foreground">Agendamento de posts</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
