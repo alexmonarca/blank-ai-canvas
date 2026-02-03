@@ -1700,7 +1700,7 @@ function Dashboard({ session }) {
   };
 
   // META EMBEDDED SIGNUP - API Oficial (WhatsApp / Instagram)
-  const handleMetaEmbeddedSignup = ({ mode } = {}) => {
+  const handleMetaEmbeddedSignup = async ({ mode } = {}) => {
     const selectedMode = mode || "both";
     const selectedConfigId =
       selectedMode === "whatsapp"
@@ -1708,6 +1708,26 @@ function Dashboard({ session }) {
         : selectedMode === "instagram"
           ? META_CONFIG_ID_INSTAGRAM
           : META_CONFIG_ID_BOTH;
+
+    // Se o WhatsApp estiver conectado via MonarcaHub, precisamos deslogar a instância
+    // antes de iniciar a API Oficial; caso contrário, o número pode ficar "ocupado".
+    if (connectionStatus === "connected") {
+      const proceed = confirm(
+        "Para conectar via API Oficial, vamos desconectar primeiro a instância atual (MonarcaHub). Deseja continuar?",
+      );
+      if (!proceed) return;
+
+      // Dispara o workflow de logout (n8n lê {{$json.instance.state}} = 'logout')
+      const logoutRes = await callEvolutionManager("logout");
+      if (!logoutRes) {
+        alert("Não foi possível desconectar a instância atual. Tente novamente.");
+        return;
+      }
+
+      setConnectionStatus("disconnected");
+      setConnectionStep("disconnected");
+      handlePartialSave({ connection_status: "disconnected", ai_active: false });
+    }
 
     // Verifica se o SDK da Meta já está carregado
     if (!window.FB) {
