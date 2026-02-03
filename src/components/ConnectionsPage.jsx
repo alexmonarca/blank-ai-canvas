@@ -60,7 +60,7 @@ export default function ConnectionsPage({
   onOpenWhatsAppConnectOfficial,
   whatsappOfficialStatus,
 
-  // Gestão (Trial já conectado)
+  // Gestão (já conectado)
   onWhatsAppDisconnect,
   onWhatsAppRestart,
 }) {
@@ -74,7 +74,9 @@ export default function ConnectionsPage({
   const showOfficialConnect = !isTrialPlan && Boolean(wantsOfficialApi);
 
   const openUnofficialConnect = () => {
-    if (isTrialPlan && whatsappUnofficialConnected) {
+    // Se já está online, o clique em "Conectar" deve abrir o modal de gestão
+    // (desconectar/reiniciar), independente do plano.
+    if (whatsappUnofficialConnected) {
       setShowAlreadyConnected(true);
       return;
     }
@@ -309,9 +311,9 @@ export default function ConnectionsPage({
               </div>
             )}
 
-            {isTrialPlan && whatsappUnofficialConnected && (
+            {whatsappUnofficialConnected && (
               <div className="rounded-2xl border border-border bg-background/40 p-4">
-                <div className="text-sm font-medium text-foreground">Gerenciar conexão (Trial)</div>
+                <div className="text-sm font-medium text-foreground">Gerenciar conexão</div>
                 <div className="mt-1 text-xs text-muted-foreground">
                   Se você já está conectado e quer trocar o número, use as ações abaixo.
                 </div>
@@ -344,7 +346,7 @@ export default function ConnectionsPage({
         </div>
       </section>
 
-      {/* Modal: já conectado (Trial) ao clicar em conectar de novo */}
+      {/* Modal: já conectado ao clicar em conectar de novo */}
       {showAlreadyConnected && (
         <div
           onClick={() => setShowAlreadyConnected(false)}
@@ -372,17 +374,19 @@ export default function ConnectionsPage({
               >
                 Desconectar
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowAlreadyConnected(false);
-                  onWhatsAppRestart?.();
-                }}
-                disabled={!onWhatsAppRestart}
-                className="flex-1 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-medium disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                Reiniciar
-              </button>
+              {onWhatsAppRestart && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAlreadyConnected(false);
+                    onWhatsAppRestart?.();
+                  }}
+                  disabled={!onWhatsAppRestart}
+                  className="flex-1 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  Reiniciar
+                </button>
+              )}
             </div>
             <button
               type="button"
