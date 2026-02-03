@@ -1167,7 +1167,9 @@ function Dashboard({ session }) {
         method: "POST",
         mode: "cors",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, instanceName }),
+        // Mantém compatibilidade com o fluxo atual (action) e também envia o formato
+        // esperado por alguns cenários no n8n (instance.state), ex: state = "logout".
+        body: JSON.stringify({ action, instanceName, instance: { state: action } }),
       });
 
       const text = await response.text();
