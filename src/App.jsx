@@ -148,7 +148,6 @@ const calculateTotal = (
   if (data.mass_sender_active) total += 150;
   if (data.use_official_api_coexistencia) total += 50;
   if (data.use_official_api_somente) total += 150;
-  if (data.ia_gestor_midias) total += 250;
 
   // Extras
   total += (extraChannels || 0) * 50;
@@ -1024,7 +1023,11 @@ function Dashboard({ session }) {
 
   const extraCreditsCost =
     extraCreditsPack === 100 ? 50 : extraCreditsPack === 500 ? 150 : extraCreditsPack === 1000 ? 250 : 0;
-  // Estados para cards recolhíveis na aba Treinar IA
+
+  // Upgrade do Gestor de Mídias agora é definido pela seleção de um pacote de créditos adicionais.
+  // Mantém compatibilidade com contas antigas que ainda tenham `ia_gestor_midias` gravado.
+  const hasMidiasUpgrade = Boolean(extraCreditsPack > 0 || gymData.ia_gestor_midias);
+
   const [isTestModeOpen, setIsTestModeOpen] = useState(false);
   const [isOfficialApiOpen, setIsOfficialApiOpen] = useState(false);
 
@@ -1999,15 +2002,15 @@ function Dashboard({ session }) {
 
       case "midias":
         // Para contas com upgrade, abre o módulo completo direto na aba MídIAs.
-        return gymData.ia_gestor_midias ? (
+        return hasMidiasUpgrade ? (
           <MidiasAppPage
             supabaseClient={supabaseClient}
             userId={userId}
-            hasMediaUpgrade={gymData.ia_gestor_midias}
+            hasMediaUpgrade={hasMidiasUpgrade}
             onOpenPlansTab={() => setActiveTab("plans")}
           />
         ) : (
-          <MidiasPage onOpenPlansTab={() => setActiveTab("plans")} hasMediaUpgrade={gymData.ia_gestor_midias} />
+          <MidiasPage onOpenPlansTab={() => setActiveTab("plans")} hasMediaUpgrade={hasMidiasUpgrade} />
         );
 
       case "midias_app":
@@ -2016,7 +2019,7 @@ function Dashboard({ session }) {
           <MidiasAppPage
             supabaseClient={supabaseClient}
             userId={userId}
-            hasMediaUpgrade={gymData.ia_gestor_midias}
+            hasMediaUpgrade={hasMidiasUpgrade}
             onBack={() => setActiveTab("midias")}
             onOpenPlansTab={() => setActiveTab("plans")}
           />
@@ -2605,23 +2608,6 @@ function Dashboard({ session }) {
                       />
                     </div>
                   </div>
-                  <div className="bg-gray-900 p-4 rounded-xl border border-purple-900/50 flex justify-between items-center">
-                    <div>
-                      <div className="flex items-center gap-2 text-purple-200 font-medium mb-1">
-                        <ImageIcon className="w-4 h-4" /> IA Gestor de Mídias
-                      </div>
-                      <p className="text-xs text-gray-500">30 créditos mensais</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs text-gray-400">R$ 250</span>
-                      <input
-                        type="checkbox"
-                        checked={gymData.ia_gestor_midias}
-                        onChange={() => setGymData((prev) => ({ ...prev, ia_gestor_midias: !prev.ia_gestor_midias }))}
-                        className="w-5 h-5 accent-purple-500 rounded cursor-pointer"
-                      />
-                    </div>
-                  </div>
 
                   <div className="bg-gray-900 p-4 rounded-xl border border-green-900/50">
                     <div className="flex items-start justify-between gap-4">
@@ -2629,7 +2615,9 @@ function Dashboard({ session }) {
                         <div className="flex items-center gap-2 text-green-200 font-medium mb-1">
                           <Gift className="w-4 h-4" /> Créditos adicionais (mensais)
                         </div>
-                        <p className="text-xs text-gray-500">Escolha um pacote para acrescentar no seu saldo todo mês.</p>
+                        <p className="text-xs text-gray-500">
+                          Escolha um pacote para seu Gestor de Mídias com IA e acrescente o valor em seu saldo todo mês.
+                        </p>
                       </div>
                       <div className="text-right">
                         <div className="text-[10px] text-gray-500">Total</div>
