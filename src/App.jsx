@@ -4,6 +4,7 @@ import AdminTrialPanel from "./components/admin/AdminTrialPanel.jsx";
 import HomeAIStart from "./components/HomeAIStart.jsx";
 import ConnectionsPage from "./components/ConnectionsPage.jsx";
 import MidiasPage from "./components/MidiasPage.jsx";
+import MidiasAppPage from "./components/MidiasAppPage.jsx";
 import LandingPage from "./components/LandingPage.jsx";
 import { supabase as supabaseClient } from "@/lib/supabaseClient";
 import { env } from "@/config/env";
@@ -1893,7 +1894,23 @@ function Dashboard({ session }) {
         );
 
       case "midias":
-        return <MidiasPage onOpenPlansTab={() => setActiveTab("plans")} hasMediaUpgrade={gymData.ia_gestor_midias} />;
+        return (
+          <MidiasPage
+            onOpenPlansTab={() => setActiveTab("plans")}
+            onOpenMidiasApp={() => setActiveTab("midias_app")}
+            hasMediaUpgrade={gymData.ia_gestor_midias}
+          />
+        );
+
+      case "midias_app":
+        return (
+          <MidiasAppPage
+            supabaseClient={supabaseClient}
+            userId={userId}
+            hasMediaUpgrade={gymData.ia_gestor_midias}
+            onBack={() => setActiveTab("midias")}
+          />
+        );
 
       // ... Outras abas (training, plans, account, admin) ...
       case "training":
