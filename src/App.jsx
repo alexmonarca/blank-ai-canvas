@@ -1024,10 +1024,6 @@ function Dashboard({ session }) {
   const extraCreditsCost =
     extraCreditsPack === 100 ? 50 : extraCreditsPack === 500 ? 150 : extraCreditsPack === 1000 ? 250 : 0;
 
-  // Upgrade do Gestor de Mídias agora é definido pela seleção de um pacote de créditos adicionais.
-  // Mantém compatibilidade com contas antigas que ainda tenham `ia_gestor_midias` gravado.
-  const hasMidiasUpgrade = Boolean(extraCreditsPack > 0 || gymData.ia_gestor_midias);
-
   const [isTestModeOpen, setIsTestModeOpen] = useState(false);
   const [isOfficialApiOpen, setIsOfficialApiOpen] = useState(false);
 
@@ -1113,6 +1109,11 @@ function Dashboard({ session }) {
     extra_users_count: 0,
     instagram_status: "disconnected",
   });
+
+  // Upgrade do Gestor de Mídias agora é definido pela seleção de um pacote de créditos adicionais.
+  // Mantém compatibilidade com contas antigas que ainda tenham `ia_gestor_midias` gravado.
+  const hasMidiasUpgrade = Boolean(extraCreditsPack > 0 || gymData.ia_gestor_midias);
+
   const [initialGymData, setInitialGymData] = useState(null);
   // CRÍTICO: Bloquear autosaves enquanto dados estão carregando
   const [isDataLoaded, setIsDataLoaded] = useState(false);
