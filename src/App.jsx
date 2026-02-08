@@ -129,7 +129,14 @@ const isSubscriptionActive = (status) => {
 };
 
 // Cálculo atualizado com desconto de Onboarding
-const calculateTotal = (data, extraChannels, extraUsers, couponDiscount = 0, onboardingDiscount = 0) => {
+const calculateTotal = (
+  data,
+  extraChannels,
+  extraUsers,
+  extraCreditsCost = 0,
+  couponDiscount = 0,
+  onboardingDiscount = 0,
+) => {
   let total = 250;
   if (!data) return total;
 
@@ -146,6 +153,7 @@ const calculateTotal = (data, extraChannels, extraUsers, couponDiscount = 0, onb
   // Extras
   total += (extraChannels || 0) * 50;
   total += (extraUsers || 0) * 50;
+  total += extraCreditsCost || 0;
 
   // Aplica descontos
   let totalDiscount = couponDiscount + onboardingDiscount;
@@ -988,6 +996,7 @@ function Dashboard({ session }) {
   const [trialInfo, setTrialInfo] = useState({ hoursLeft: 48, status: "active", endsAt: null, source: "default" });
   const [subscriptionInfo, setSubscriptionInfo] = useState({ plan_type: "trial_7_days", status: "active" });
   const [extraChannels, setExtraChannels] = useState(0);
+  const [extraCreditsPack, setExtraCreditsPack] = useState(0); // 0 | 100 | 500 | 1000
   const [logs, setLogs] = useState([]);
   const [trainingError, setTrainingError] = useState("");
   const [instagramError, setInstagramError] = useState("");
@@ -1013,6 +1022,8 @@ function Dashboard({ session }) {
   // NOVO: Desconto por Gamificação
   const [onboardingDiscount, setOnboardingDiscount] = useState(0);
 
+  const extraCreditsCost =
+    extraCreditsPack === 100 ? 50 : extraCreditsPack === 500 ? 150 : extraCreditsPack === 1000 ? 250 : 0;
   // Estados para cards recolhíveis na aba Treinar IA
   const [isTestModeOpen, setIsTestModeOpen] = useState(false);
   const [isOfficialApiOpen, setIsOfficialApiOpen] = useState(false);
@@ -1041,6 +1052,7 @@ function Dashboard({ session }) {
       gymData,
       extraChannels,
       gymData.extra_users_count,
+      extraCreditsCost,
       0,
       0,
     );
@@ -1478,7 +1490,14 @@ function Dashboard({ session }) {
 
         // Disparos (retenção): envia configuração para o webhook SEM travar UX
         // Regra: disponível apenas fora do trial e para total >= R$300
-        const totalNoDiscounts = calculateTotal(customData || gymData, extraChannels, (customData || gymData).extra_users_count, 0, 0);
+        const totalNoDiscounts = calculateTotal(
+          customData || gymData,
+          extraChannels,
+          (customData || gymData).extra_users_count,
+          extraCreditsCost,
+          0,
+          0,
+        );
         const retentionEnabledByPlan =
           isSubscriptionActive(subscriptionInfo?.status) &&
           subscriptionInfo?.plan_type !== "trial_7_days" &&
@@ -1567,7 +1586,7 @@ function Dashboard({ session }) {
 
   // CÁLCULO DE PREÇO (COM DESCONTO ONBOARDING)
   // Regra: cupom só aplica quando o total sem descontos for > R$ 250.
-  const totalWithoutDiscounts = calculateTotal(gymData, extraChannels, gymData.extra_users_count, 0, 0);
+  const totalWithoutDiscounts = calculateTotal(gymData, extraChannels, gymData.extra_users_count, extraCreditsCost, 0, 0);
   const retentionUnlocked =
     isSubscriptionActive(subscriptionInfo?.status) &&
     subscriptionInfo?.plan_type !== "trial_7_days" &&
@@ -1579,6 +1598,7 @@ function Dashboard({ session }) {
     gymData,
     extraChannels,
     gymData.extra_users_count,
+    extraCreditsCost,
     couponAmountToApply,
     onboardingDiscount,
   );
@@ -1586,6 +1606,7 @@ function Dashboard({ session }) {
     initialGymData,
     extraChannels,
     gymData.extra_users_count,
+    extraCreditsCost,
     couponAmountToApply,
     onboardingDiscount,
   );
@@ -1648,6 +1669,7 @@ function Dashboard({ session }) {
         disparador: gymData.mass_sender_active,
         api_oficial: gymData.use_official_api,
         usuarios_extras: gymData.extra_users_count,
+        creditos_adicionais: extraCreditsPack,
       },
     };
     try {
@@ -1982,6 +2004,7 @@ function Dashboard({ session }) {
             supabaseClient={supabaseClient}
             userId={userId}
             hasMediaUpgrade={gymData.ia_gestor_midias}
+            onOpenPlansTab={() => setActiveTab("plans")}
           />
         ) : (
           <MidiasPage onOpenPlansTab={() => setActiveTab("plans")} hasMediaUpgrade={gymData.ia_gestor_midias} />
@@ -1995,6 +2018,7 @@ function Dashboard({ session }) {
             userId={userId}
             hasMediaUpgrade={gymData.ia_gestor_midias}
             onBack={() => setActiveTab("midias")}
+            onOpenPlansTab={() => setActiveTab("plans")}
           />
         );
 
@@ -2506,6 +2530,12 @@ function Dashboard({ session }) {
                       <span>R$ {gymData.extra_users_count * 50}</span>
                     </div>
                   )}
+                  {extraCreditsPack > 0 && (
+                    <div className="flex justify-between text-green-300">
+                      <span>+ Créditos adicionais ({extraCreditsPack}/mês)</span>
+                      <span>R$ {extraCreditsCost}</span>
+                    </div>
+                  )}
                 </div>
                 {/* CAMPO DE CUPOM E BOTÃO */}
                 <div className="mt-4">
@@ -2592,6 +2622,57 @@ function Dashboard({ session }) {
                       />
                     </div>
                   </div>
+
+                  <div className="bg-gray-900 p-4 rounded-xl border border-green-900/50">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <div className="flex items-center gap-2 text-green-200 font-medium mb-1">
+                          <Gift className="w-4 h-4" /> Créditos adicionais (mensais)
+                        </div>
+                        <p className="text-xs text-gray-500">Escolha um pacote para acrescentar no seu saldo todo mês.</p>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-[10px] text-gray-500">Total</div>
+                        <div className="text-xs font-semibold text-gray-200">R$ {extraCreditsCost}</div>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setExtraCreditsPack(100)}
+                        className={`px-3 py-2 rounded-lg border text-left transition-colors ${extraCreditsPack === 100 ? "bg-green-500/10 border-green-500/40 text-green-200" : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700/50"}`}
+                      >
+                        <div className="text-xs font-bold">100 créditos</div>
+                        <div className="text-[10px] text-gray-400">R$ 50/mês</div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setExtraCreditsPack(500)}
+                        className={`px-3 py-2 rounded-lg border text-left transition-colors ${extraCreditsPack === 500 ? "bg-green-500/10 border-green-500/40 text-green-200" : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700/50"}`}
+                      >
+                        <div className="text-xs font-bold">500 créditos</div>
+                        <div className="text-[10px] text-gray-400">R$ 150/mês</div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setExtraCreditsPack(1000)}
+                        className={`px-3 py-2 rounded-lg border text-left transition-colors ${extraCreditsPack === 1000 ? "bg-green-500/10 border-green-500/40 text-green-200" : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700/50"}`}
+                      >
+                        <div className="text-xs font-bold">1000 créditos</div>
+                        <div className="text-[10px] text-gray-400">R$ 250/mês</div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setExtraCreditsPack(0)}
+                        className={`px-3 py-2 rounded-lg border text-left transition-colors ${extraCreditsPack === 0 ? "bg-gray-700 border-gray-500 text-white" : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700/50"}`}
+                      >
+                        <div className="text-xs font-bold">Sem adicionais</div>
+                        <div className="text-[10px] text-gray-400">R$ 0/mês</div>
+                      </button>
+                    </div>
+                  </div>
+
                   <div className="bg-gray-900 p-4 rounded-xl border border-gray-700">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2 text-gray-200 font-medium">
