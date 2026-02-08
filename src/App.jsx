@@ -1736,8 +1736,9 @@ function Dashboard({ session }) {
       const compressed = await compressImageFile(file);
 
       // Upload para storage (não salvar base64 no banco)
+      // IMPORTANTE: mantém o prefixo 'midias/{uid}/' para bater com as policies existentes do bucket.
       const ext = (compressed.name.split(".").pop() || "jpg").toLowerCase();
-      const path = `account/${userId}/profile-${Date.now()}.${ext}`;
+      const path = `midias/${userId}/profile-${Date.now()}.${ext}`;
 
       const { error: upErr } = await supabaseClient.storage.from("brand-assets").upload(path, await compressed.arrayBuffer(), {
         contentType: compressed.type || "image/jpeg",
