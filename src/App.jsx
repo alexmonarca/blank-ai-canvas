@@ -1674,12 +1674,93 @@ function Dashboard({ session }) {
   const updateBranch = (id, val) =>
     setGymData((prev) => ({ ...prev, branches: prev.branches.map((b) => (b.id === id ? { ...b, address: val } : b)) }));
   const removeBranch = (id) => setGymData((prev) => ({ ...prev, branches: prev.branches.filter((b) => b.id !== id) }));
-  const handleLogoUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setGymData((prev) => ({ ...prev, logo_url: reader.result }));
-      reader.readAsDataURL(file);
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    try {
+      // Compressão client-side para evitar upload pesado
+      const compressImageFile = async (f, { maxSize = 1_500_000, maxDimension = 1600, quality = 0.82 } = {}) => {
+        if (!f || f.size <= maxSize) return f;
+        if (!f.type?.startsWith("image/")) return f;
+
+        let bitmap;
+        try {
+          if (typeof createImageBitmap === "function") bitmap = await createImageBitmap(f);
+        } catch (_e) {
+          bitmap = null;
+        }
+
+        if (!bitmap) {
+          const dataUrl = await new Promise((resolve, reject) => {
+            const r = new FileReader();
+            r.onerror = () => reject(new Error("Falha ao ler imagem."));
+            r.onload = () => resolve(String(r.result));
+            r.readAsDataURL(f);
+          });
+
+          bitmap = await new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = () => reject(new Error("Falha ao decodificar imagem."));
+            img.src = dataUrl;
+          });
+        }
+
+        const width = bitmap.width;
+        const height = bitmap.height;
+        const scale = Math.min(1, maxDimension / Math.max(width, height));
+        const targetW = Math.max(1, Math.round(width * scale));
+        const targetH = Math.max(1, Math.round(height * scale));
+
+        const canvas = document.createElement("canvas");
+        canvas.width = targetW;
+        canvas.height = targetH;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return f;
+        ctx.drawImage(bitmap, 0, 0, targetW, targetH);
+
+        const mime = "image/jpeg";
+        let q = quality;
+        let blob = await new Promise((resolve) => canvas.toBlob(resolve, mime, q));
+        for (let i = 0; i < 6 && blob && blob.size > maxSize; i++) {
+          q = Math.max(0.4, q - 0.08);
+          blob = await new Promise((resolve) => canvas.toBlob(resolve, mime, q));
+        }
+        if (!blob) return f;
+        const nextName = f.name.replace(/\.[^.]+$/, "") + ".jpg";
+        return new File([blob], nextName, { type: mime });
+      };
+
+      const compressed = await compressImageFile(file);
+
+      // Upload para storage (não salvar base64 no banco)
+      const ext = (compressed.name.split(".").pop() || "jpg").toLowerCase();
+      const path = `account/${userId}/profile-${Date.now()}.${ext}`;
+
+      const { error: upErr } = await supabaseClient.storage.from("brand-assets").upload(path, await compressed.arrayBuffer(), {
+        contentType: compressed.type || "image/jpeg",
+        upsert: true,
+      });
+      if (upErr) throw upErr;
+
+      const { data } = supabaseClient.storage.from("brand-assets").getPublicUrl(path);
+      const publicUrl = data?.publicUrl;
+      if (!publicUrl) throw new Error("Não foi possível obter URL pública.");
+
+      // Atualiza UI imediatamente
+      setGymData((prev) => ({ ...prev, logo_url: publicUrl }));
+
+      // Persiste automaticamente em gym_configs (update parcial)
+      await handlePartialSave({ logo_url: publicUrl });
+
+      // Recarrega do banco para evitar qualquer divergência
+      const { data: fresh } = await supabaseClient.from("gym_configs").select("logo_url").eq("user_id", userId).maybeSingle();
+      if (fresh?.logo_url) setGymData((prev) => ({ ...prev, logo_url: fresh.logo_url }));
+    } catch (err) {
+      console.error("Falha ao atualizar foto de perfil:", err);
+      alert("Não foi possível salvar sua foto de perfil. Verifique as permissões do bucket e tente novamente.");
     }
   };
   const toggleOfficialApiCoexistencia = (val) => {
