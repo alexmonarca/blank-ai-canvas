@@ -96,7 +96,37 @@ async function compressImageFile(file, { maxSize = 1_500_000, maxDimension = 160
 
 function safeJsonArray(value) {
   if (!value) return [];
-  if (Array.isArray(value)) return value;
+
+  // Já é array (json/jsonb no banco)
+  if (Array.isArray(value)) {
+    return value
+      .map((v) => (typeof v === "string" ? v.trim() : ""))
+      .filter(Boolean);
+  }
+
+  // Vem como string (ex.: "[\"url1\",\"url2\"]" em coluna TEXT)
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map((v) => (typeof v === "string" ? v.trim() : ""))
+          .filter(Boolean);
+      }
+    } catch (_e) {
+      // fallback: tenta quebrar por vírgula caso venha "url1,url2"
+      if (trimmed.includes(",")) {
+        return trimmed
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
+      }
+    }
+  }
+
   return [];
 }
 
@@ -722,12 +752,52 @@ export default function MidiasAppPage({
                     <div className="space-y-3">
                       <label className="block">
                         <div className="text-xs text-muted-foreground">Tom de voz</div>
-                        <input
-                          value={brandData.tone_of_voice}
-                          onChange={(e) => setBrandData((p) => ({ ...p, tone_of_voice: e.target.value }))}
-                          className="mt-1 w-full rounded-xl border border-border bg-background px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-                          placeholder="Ex.: Profissional, divertido, direto…"
-                        />
+                        {(() => {
+                          const presets = [
+                            "Profissional",
+                            "Amigável",
+                            "Motivador",
+                            "Divertido",
+                            "Direto",
+                            "Inspirador",
+                            "Premium",
+                          ];
+                          const isCustom = Boolean(brandData.tone_of_voice) && !presets.includes(brandData.tone_of_voice);
+                          const selectValue = isCustom ? "__custom__" : brandData.tone_of_voice;
+
+                          return (
+                            <div className="mt-1 space-y-2">
+                              <select
+                                value={selectValue || "Profissional"}
+                                onChange={(e) => {
+                                  const v = e.target.value;
+                                  if (v === "__custom__") {
+                                    setBrandData((p) => ({ ...p, tone_of_voice: "" }));
+                                  } else {
+                                    setBrandData((p) => ({ ...p, tone_of_voice: v }));
+                                  }
+                                }}
+                                className="w-full rounded-xl border border-border bg-background px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                              >
+                                {presets.map((p) => (
+                                  <option key={p} value={p}>
+                                    {p}
+                                  </option>
+                                ))}
+                                <option value="__custom__">Personalizado…</option>
+                              </select>
+
+                              {(selectValue === "__custom__" || isCustom) && (
+                                <input
+                                  value={brandData.tone_of_voice}
+                                  onChange={(e) => setBrandData((p) => ({ ...p, tone_of_voice: e.target.value }))}
+                                  className="w-full rounded-xl border border-border bg-background px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                  placeholder="Ex.: acolhedor, técnico, irreverente…"
+                                />
+                              )}
+                            </div>
+                          );
+                        })()}
                       </label>
                       <label className="block">
                         <div className="text-xs text-muted-foreground">Personalidade</div>
