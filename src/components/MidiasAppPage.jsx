@@ -28,6 +28,72 @@ async function fileToArrayBuffer(file) {
   return await file.arrayBuffer();
 }
 
+async function compressImageFile(file, { maxSize = 1_500_000, maxDimension = 1600, quality = 0.82 } = {}) {
+  // Se já estiver pequeno, mantém.
+  if (!file || file.size <= maxSize) return file;
+  if (!file.type?.startsWith("image/")) return file;
+
+  // Evita travar com arquivos gigantes (ainda assim vai tentar, mas limita)
+  const safeFile = file.size > 15_000_000 ? new File([file], file.name, { type: file.type }) : file;
+
+  let bitmap;
+  try {
+    if (typeof createImageBitmap === "function") {
+      bitmap = await createImageBitmap(safeFile);
+    }
+  } catch (_e) {
+    bitmap = null;
+  }
+
+  // Fallback via Image() para navegadores que não suportam createImageBitmap
+  if (!bitmap) {
+    const dataUrl = await new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onerror = () => reject(new Error("Falha ao ler imagem."));
+      r.onload = () => resolve(String(r.result));
+      r.readAsDataURL(safeFile);
+    });
+
+    bitmap = await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("Falha ao decodificar imagem."));
+      img.src = dataUrl;
+    });
+  }
+
+  const width = bitmap.width;
+  const height = bitmap.height;
+  const scale = Math.min(1, maxDimension / Math.max(width, height));
+  const targetW = Math.max(1, Math.round(width * scale));
+  const targetH = Math.max(1, Math.round(height * scale));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = targetW;
+  canvas.height = targetH;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return file;
+
+  ctx.drawImage(bitmap, 0, 0, targetW, targetH);
+
+  // Preferir jpeg para reduzir peso (webp pode falhar em alguns fluxos/policies)
+  const mime = "image/jpeg";
+
+  let q = quality;
+  let blob = await new Promise((resolve) => canvas.toBlob(resolve, mime, q));
+
+  // Ajusta qualidade para bater o teto de tamanho
+  for (let i = 0; i < 6 && blob && blob.size > maxSize; i++) {
+    q = Math.max(0.4, q - 0.08);
+    blob = await new Promise((resolve) => canvas.toBlob(resolve, mime, q));
+  }
+
+  if (!blob) return file;
+
+  const nextName = file.name.replace(/\.[^.]+$/, "") + ".jpg";
+  return new File([blob], nextName, { type: mime });
+}
+
 function safeJsonArray(value) {
   if (!value) return [];
   if (Array.isArray(value)) return value;
@@ -154,13 +220,13 @@ export default function MidiasAppPage({ supabaseClient, userId, onBack, hasMedia
   const uploadToStorage = async (file, kind) => {
     if (!supabaseClient || !userId) throw new Error("Sem sessão.");
 
-    const ext = (file.name.split(".").pop() || "png").toLowerCase();
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
     const path = `midias/${userId}/${kind}-${Date.now()}.${ext}`;
 
     const { error: upErr } = await supabaseClient.storage
       .from(STORAGE_BUCKET)
       .upload(path, await fileToArrayBuffer(file), {
-        contentType: file.type,
+        contentType: file.type || "image/jpeg",
         upsert: true,
       });
 
@@ -177,14 +243,11 @@ export default function MidiasAppPage({ supabaseClient, userId, onBack, hasMedia
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
-    if (file.size > 1_500_000) {
-      alert("Imagem superior a 1.5MB.");
-      return;
-    }
 
     try {
       setSaveStatus("saving");
-      const url = await uploadToStorage(file, "logo");
+      const compressed = await compressImageFile(file);
+      const url = await uploadToStorage(compressed, "logo");
       setBrandData((prev) => ({ ...prev, logo_url: url }));
       setSaveStatus("saved");
     } catch (e2) {
@@ -197,10 +260,6 @@ export default function MidiasAppPage({ supabaseClient, userId, onBack, hasMedia
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
-    if (file.size > 1_500_000) {
-      alert("Imagem superior a 1.5MB.");
-      return;
-    }
     if (brandData.reference_images.length >= 3) {
       alert("Limite de 3 imagens de referência atingido.");
       return;
@@ -208,7 +267,8 @@ export default function MidiasAppPage({ supabaseClient, userId, onBack, hasMedia
 
     try {
       setSaveStatus("saving");
-      const url = await uploadToStorage(file, `ref-${brandData.reference_images.length + 1}`);
+      const compressed = await compressImageFile(file);
+      const url = await uploadToStorage(compressed, `ref-${brandData.reference_images.length + 1}`);
       setBrandData((prev) => ({ ...prev, reference_images: [...prev.reference_images, url] }));
       setSaveStatus("saved");
     } catch (e2) {
