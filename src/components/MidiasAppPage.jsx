@@ -100,7 +100,14 @@ function safeJsonArray(value) {
   return [];
 }
 
-export default function MidiasAppPage({ supabaseClient, userId, onBack, onOpenPlansTab, hasMediaUpgrade = false }) {
+export default function MidiasAppPage({
+  supabaseClient,
+  userId,
+  onBack,
+  onOpenPlansTab,
+  hasMediaUpgrade = false,
+  selectedCreditsPack = 0,
+}) {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -132,7 +139,11 @@ export default function MidiasAppPage({ supabaseClient, userId, onBack, onOpenPl
   const [newColor, setNewColor] = useState("#EA580C");
   const [saveStatus, setSaveStatus] = useState(null); // saving|saved|error
 
-  const canUse = Boolean(hasMediaUpgrade);
+  // Regra:
+  // - Acesso ao módulo: saldo > 0 OU pacote mensal selecionado
+  // - Uso (gerar): exige saldo suficiente
+  const canUse = credits > 0;
+  const hasAccess = Boolean(hasMediaUpgrade || selectedCreditsPack > 0);
 
   const formats = useMemo(
     () => [
@@ -434,7 +445,7 @@ export default function MidiasAppPage({ supabaseClient, userId, onBack, onOpenPl
     await generateFromPrompt(text);
   };
 
-  if (!hasMediaUpgrade) {
+  if (!hasAccess) {
     return (
       <main className="max-w-5xl mx-auto animate-in fade-in">
         <header className="mb-6 flex items-center justify-between gap-3">
@@ -459,11 +470,20 @@ export default function MidiasAppPage({ supabaseClient, userId, onBack, onOpenPl
           <div className="flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-primary mt-0.5" />
             <div>
-              <div className="text-sm font-semibold text-foreground">Upgrade necessário</div>
+              <div className="text-sm font-semibold text-foreground">Créditos necessários</div>
               <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
-                Para usar o módulo completo do <strong className="text-foreground">Gestor de Mídias</strong>, ative o upgrade
-                no seu plano.
+                Para usar o <strong className="text-foreground">Gestor de Mídias</strong>, selecione um pacote em{" "}
+                <strong className="text-foreground">Assinatura → Créditos adicionais</strong> ou adicione créditos ao seu saldo.
               </p>
+              {onOpenPlansTab && (
+                <button
+                  type="button"
+                  onClick={onOpenPlansTab}
+                  className="mt-3 inline-flex h-10 px-4 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm"
+                >
+                  Ver Assinatura
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -507,6 +527,16 @@ export default function MidiasAppPage({ supabaseClient, userId, onBack, onOpenPl
           )}
         </div>
       </header>
+
+      {selectedCreditsPack > 0 && !canUse && !loading && (
+        <div className="mb-4 rounded-2xl border border-border bg-muted/30 p-4 text-sm text-foreground">
+          <div className="font-semibold">Pacote selecionado — aguardando créditos</div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Assim que os créditos entrarem no saldo, o chat libera automaticamente. Enquanto isso, você pode revisar sua Marca
+            e histórico.
+          </p>
+        </div>
+      )}
 
       {errorMsg && (
         <div className="mb-4 rounded-2xl border border-destructive/30 bg-destructive/10 text-destructive-foreground p-4 text-sm">

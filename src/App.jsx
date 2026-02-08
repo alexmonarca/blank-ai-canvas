@@ -996,6 +996,7 @@ function Dashboard({ session }) {
   const [subscriptionInfo, setSubscriptionInfo] = useState({ plan_type: "trial_7_days", status: "active" });
   const [extraChannels, setExtraChannels] = useState(0);
   const [extraCreditsPack, setExtraCreditsPack] = useState(0); // 0 | 100 | 500 | 1000
+  const [creditsBalance, setCreditsBalance] = useState(0);
   const [logs, setLogs] = useState([]);
   const [trainingError, setTrainingError] = useState("");
   const [instagramError, setInstagramError] = useState("");
@@ -1110,9 +1111,11 @@ function Dashboard({ session }) {
     instagram_status: "disconnected",
   });
 
-  // Upgrade do Gestor de Mídias agora é definido pela seleção de um pacote de créditos adicionais.
-  // Mantém compatibilidade com contas antigas que ainda tenham `ia_gestor_midias` gravado.
-  const hasMidiasUpgrade = Boolean(extraCreditsPack > 0 || gymData.ia_gestor_midias);
+  // Acesso ao Gestor de Mídias:
+  // - saldo de créditos no perfil, OU
+  // - pacote mensal selecionado (persistido), OU
+  // - compatibilidade com contas antigas (`ia_gestor_midias`)
+  const hasMidiasUpgrade = Boolean(creditsBalance > 0 || extraCreditsPack > 0 || gymData.ia_gestor_midias);
 
   const [initialGymData, setInitialGymData] = useState(null);
   // CRÍTICO: Bloquear autosaves enquanto dados estão carregando
@@ -1398,6 +1401,7 @@ function Dashboard({ session }) {
           }
           if (data.extra_channels_count) setExtraChannels(data.extra_channels_count);
           if (data.extra_users_count) setGymData((prev) => ({ ...prev, extra_users_count: data.extra_users_count }));
+          if (typeof data.extra_credits_pack === "number") setExtraCreditsPack(data.extra_credits_pack);
         } else {
           await supabaseClient.from("gym_configs").insert({
             user_id: userId,
@@ -1409,6 +1413,16 @@ function Dashboard({ session }) {
           setConnectionStep("disconnected");
           setInitialGymData(gymData);
         }
+        // Saldo de créditos no perfil (libera MídIAs)
+        {
+          const { data: pData, error: pErr } = await supabaseClient
+            .from("profiles")
+            .select("credits_balance")
+            .eq("id", userId)
+            .maybeSingle();
+          if (!pErr) setCreditsBalance(pData?.credits_balance ?? 0);
+        }
+
         let sub = await supabaseClient
           .from("subscriptions")
           .select("plan_type, status, cupom")
@@ -1471,6 +1485,11 @@ function Dashboard({ session }) {
     }
   };
 
+  const handleSelectExtraCreditsPack = async (pack) => {
+    setExtraCreditsPack(pack);
+    await handlePartialSave({ extra_credits_pack: pack });
+  };
+
   const handleSave = async (customData = null) => {
     const isFullSave = !customData;
     if (isFullSave) setIsSaving(true);
@@ -1481,6 +1500,7 @@ function Dashboard({ session }) {
       needs_reprocessing: true,
       extra_channels_count: extraChannels,
       extra_users_count: (customData || gymData).extra_users_count,
+      extra_credits_pack: extraCreditsPack,
     };
     delete dataToSave.email;
     delete dataToSave.password;
@@ -2002,16 +2022,14 @@ function Dashboard({ session }) {
         );
 
       case "midias":
-        // Para contas com upgrade, abre o módulo completo direto na aba MídIAs.
-        return hasMidiasUpgrade ? (
+        return (
           <MidiasAppPage
             supabaseClient={supabaseClient}
             userId={userId}
             hasMediaUpgrade={hasMidiasUpgrade}
+            selectedCreditsPack={extraCreditsPack}
             onOpenPlansTab={() => setActiveTab("plans")}
           />
-        ) : (
-          <MidiasPage onOpenPlansTab={() => setActiveTab("plans")} hasMediaUpgrade={hasMidiasUpgrade} />
         );
 
       case "midias_app":
@@ -2021,6 +2039,7 @@ function Dashboard({ session }) {
             supabaseClient={supabaseClient}
             userId={userId}
             hasMediaUpgrade={hasMidiasUpgrade}
+            selectedCreditsPack={extraCreditsPack}
             onBack={() => setActiveTab("midias")}
             onOpenPlansTab={() => setActiveTab("plans")}
           />
@@ -2629,7 +2648,7 @@ function Dashboard({ session }) {
                     <div className="mt-3 grid grid-cols-2 gap-2">
                       <button
                         type="button"
-                        onClick={() => setExtraCreditsPack(100)}
+                        onClick={() => handleSelectExtraCreditsPack(100)}
                         className={`px-3 py-2 rounded-lg border text-left transition-colors ${extraCreditsPack === 100 ? "bg-green-500/10 border-green-500/40 text-green-200" : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700/50"}`}
                       >
                         <div className="text-xs font-bold">100 créditos</div>
@@ -2637,7 +2656,7 @@ function Dashboard({ session }) {
                       </button>
                       <button
                         type="button"
-                        onClick={() => setExtraCreditsPack(500)}
+                        onClick={() => handleSelectExtraCreditsPack(500)}
                         className={`px-3 py-2 rounded-lg border text-left transition-colors ${extraCreditsPack === 500 ? "bg-green-500/10 border-green-500/40 text-green-200" : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700/50"}`}
                       >
                         <div className="text-xs font-bold">500 créditos</div>
@@ -2645,7 +2664,7 @@ function Dashboard({ session }) {
                       </button>
                       <button
                         type="button"
-                        onClick={() => setExtraCreditsPack(1000)}
+                        onClick={() => handleSelectExtraCreditsPack(1000)}
                         className={`px-3 py-2 rounded-lg border text-left transition-colors ${extraCreditsPack === 1000 ? "bg-green-500/10 border-green-500/40 text-green-200" : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700/50"}`}
                       >
                         <div className="text-xs font-bold">1000 créditos</div>
@@ -2653,7 +2672,7 @@ function Dashboard({ session }) {
                       </button>
                       <button
                         type="button"
-                        onClick={() => setExtraCreditsPack(0)}
+                        onClick={() => handleSelectExtraCreditsPack(0)}
                         className={`px-3 py-2 rounded-lg border text-left transition-colors ${extraCreditsPack === 0 ? "bg-gray-700 border-gray-500 text-white" : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700/50"}`}
                       >
                         <div className="text-xs font-bold">Sem adicionais</div>
