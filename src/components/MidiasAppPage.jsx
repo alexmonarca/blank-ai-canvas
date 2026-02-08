@@ -100,7 +100,7 @@ function safeJsonArray(value) {
   return [];
 }
 
-export default function MidiasAppPage({ supabaseClient, userId, onBack, hasMediaUpgrade = false }) {
+export default function MidiasAppPage({ supabaseClient, userId, onBack, onOpenPlansTab, hasMediaUpgrade = false }) {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -480,12 +480,22 @@ export default function MidiasAppPage({ supabaseClient, userId, onBack, hasMedia
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">Gere criativos e legendas com base na sua marca.</p>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background/40 px-4 h-10">
-            <CreditCard className="w-4 h-4 text-primary" />
-            <span className="text-sm text-foreground">Créditos:</span>
-            <span className="text-sm font-semibold text-foreground">{credits}</span>
-          </div>
+          <div className="flex items-center gap-2">
+            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background/40 px-4 h-10">
+              <CreditCard className="w-4 h-4 text-primary" />
+              <span className="text-sm text-foreground">Créditos:</span>
+              <span className="text-sm font-semibold text-foreground">{credits}</span>
+              {onOpenPlansTab && (
+                <button
+                  type="button"
+                  onClick={onOpenPlansTab}
+                  className="ml-2 text-xs font-semibold text-primary hover:underline"
+                  title="Comprar créditos adicionais"
+                >
+                  Adicionar
+                </button>
+              )}
+            </div>
           {onBack && (
             <button
               type="button"
