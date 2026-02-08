@@ -725,7 +725,7 @@ export default function MidiasAppPage({ supabaseClient, userId, onBack, hasMedia
                     </div>
                   </div>
 
-                  <div className="flex flex-col h-[560px]">
+                  <div className="flex flex-col h-[70vh] md:h-[560px]">
                     <div className="flex-1 overflow-y-auto p-5 space-y-4 chat-scroll">
                       {messages.map((msg, idx) => (
                         <div key={idx} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
