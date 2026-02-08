@@ -23,6 +23,7 @@ export default function HomeAIStart({
   onOpenPlansTab,
   onOpenConnectionsTab,
   planName,
+  isTrialPlan,
 
   // WhatsApp status (para validar ativação da IA)
   whatsappUnofficialStatus,
@@ -397,7 +398,7 @@ export default function HomeAIStart({
             </div>
 
             <h1 className="mt-2 text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-foreground leading-tight">
-              Bora Treinar essa IA?
+              {isTrialPlan ? "Bora Treinar essa IA?" : "Olá! Como posso ajudar hoje?"}
             </h1>
           </div>
         </div>
