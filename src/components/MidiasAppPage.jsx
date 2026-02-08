@@ -9,6 +9,7 @@ import {
   Sparkles,
   Monitor,
   Smartphone,
+  MessageSquare,
   AlertCircle,
   RefreshCw,
   Send,
@@ -69,6 +70,7 @@ export default function MidiasAppPage({ supabaseClient, userId, onBack, hasMedia
 
   const formats = useMemo(
     () => [
+      { id: "texto", label: "Texto (ideia/legenda)", icon: MessageSquare },
       { id: "quadrado", label: "Quadrado", icon: Monitor },
       { id: "retrato_4x5", label: "Retrato (4:5)", icon: Monitor },
       { id: "story", label: "Story", icon: Smartphone },
@@ -92,12 +94,32 @@ export default function MidiasAppPage({ supabaseClient, userId, onBack, hasMedia
       setCredits(pData?.credits_balance ?? 0);
 
       // brand
-      const { data: bData, error: bErr } = await supabaseClient
-        .from("brand_settings")
-        .select("id,logo_url,colors,reference_images,personality,tone_of_voice")
-        .eq("id", userId)
-        .maybeSingle();
-      if (bErr) throw bErr;
+      // Suporta 2 schemas comuns:
+      // A) brand_settings.user_id (recomendado)
+      // B) brand_settings.id == auth.uid() (legado)
+      let bData = null;
+      {
+        const attemptUserId = await supabaseClient
+          .from("brand_settings")
+          .select("id,user_id,logo_url,colors,reference_images,personality,tone_of_voice")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        if (!attemptUserId.error) {
+          bData = attemptUserId.data;
+        } else if (String(attemptUserId.error?.message || "").includes("column") && String(attemptUserId.error?.message || "").includes("user_id")) {
+          const attemptId = await supabaseClient
+            .from("brand_settings")
+            .select("id,logo_url,colors,reference_images,personality,tone_of_voice")
+            .eq("id", userId)
+            .maybeSingle();
+          if (attemptId.error) throw attemptId.error;
+          bData = attemptId.data;
+        } else {
+          throw attemptUserId.error;
+        }
+      }
+
       if (bData) {
         setBrandData({
           colors: Array.isArray(bData.colors) ? bData.colors : ["#EA580C"],
@@ -208,8 +230,7 @@ export default function MidiasAppPage({ supabaseClient, userId, onBack, hasMedia
     setSaveStatus("saving");
     setErrorMsg("");
     try {
-      const payload = {
-        id: userId,
+      const basePayload = {
         logo_url: brandData.logo_url || null,
         colors: Array.isArray(brandData.colors) ? brandData.colors : ["#EA580C"],
         reference_images: safeJsonArray(brandData.reference_images),
@@ -217,8 +238,23 @@ export default function MidiasAppPage({ supabaseClient, userId, onBack, hasMedia
         tone_of_voice: brandData.tone_of_voice || null,
       };
 
-      const { error } = await supabaseClient.from("brand_settings").upsert(payload, { onConflict: "id" });
-      if (error) throw error;
+      // Preferido: user_id
+      const attemptUserId = await supabaseClient
+        .from("brand_settings")
+        .upsert({ ...basePayload, user_id: userId }, { onConflict: "user_id" });
+
+      if (attemptUserId.error) {
+        // Legado: id == userId
+        if (String(attemptUserId.error?.message || "").includes("column") && String(attemptUserId.error?.message || "").includes("user_id")) {
+          const attemptId = await supabaseClient
+            .from("brand_settings")
+            .upsert({ ...basePayload, id: userId }, { onConflict: "id" });
+          if (attemptId.error) throw attemptId.error;
+        } else {
+          throw attemptUserId.error;
+        }
+      }
+
       setSaveStatus("saved");
     } catch (e) {
       setSaveStatus("error");
@@ -258,8 +294,11 @@ export default function MidiasAppPage({ supabaseClient, userId, onBack, hasMedia
     if (!String(userPrompt || "").trim()) return;
     if (!canUse) return;
 
-    if (credits <= 0) {
-      setErrorMsg("Sem créditos disponíveis.");
+    const isTextOnly = selectedFormat === "texto";
+    const creditsToConsume = isTextOnly ? 1 : 10;
+
+    if (credits < creditsToConsume) {
+      setErrorMsg(`Créditos insuficientes. Necessário: ${creditsToConsume}.`);
       return;
     }
 
@@ -287,16 +326,21 @@ export default function MidiasAppPage({ supabaseClient, userId, onBack, hasMedia
         throw new Error(json?.error || `Webhook retornou ${resp.status}`);
       }
 
-      if (!json?.image && !json?.caption) {
-        throw new Error("Resposta do webhook inválida. Esperado { image, caption }.");
+      // O fluxo responde 1 coisa por vez:
+      // - Texto: exige caption
+      // - Imagem: exige image (caption é opcional)
+      if (isTextOnly) {
+        if (!json?.caption) throw new Error("Resposta do webhook inválida para Texto. Esperado { caption }.");
+      } else {
+        if (!json?.image) throw new Error("Resposta do webhook inválida para Imagem. Esperado { image }.");
       }
 
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: json.caption || "",
-          image: json.image || "",
+          content: json?.caption || "",
+          image: json?.image || "",
           meta: { format: selectedFormat },
         },
       ]);
@@ -304,8 +348,8 @@ export default function MidiasAppPage({ supabaseClient, userId, onBack, hasMedia
       // 2) consome crédito via RPC
       const { error: rpcErr } = await supabaseClient.rpc("consume_credits", {
         user_id_param: userId,
-        amount_to_consume: 1,
-        desc_param: `Geração de mídia (${selectedFormat})`,
+        amount_to_consume: creditsToConsume,
+        desc_param: isTextOnly ? "Texto (ideia/legenda)" : `Geração de imagem (${selectedFormat})`,
       });
       if (rpcErr) throw rpcErr;
 
@@ -663,8 +707,8 @@ export default function MidiasAppPage({ supabaseClient, userId, onBack, hasMedia
                     })}
                   </div>
                   <div className="mt-3 text-xs text-muted-foreground">
-                    1 crédito por geração. {brandData.logo_url ? "Logo ok" : "Sem logo"} · {brandData.reference_images.length}/3
-                    refs
+                    {selectedFormat === "texto" ? "Texto consome 1 crédito" : "Imagem consome 10 créditos"}. {brandData.logo_url ? "Logo ok" : "Sem logo"} ·{" "}
+                    {brandData.reference_images.length}/3 refs
                   </div>
                 </div>
 
