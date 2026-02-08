@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Palette,
   CreditCard,
@@ -9,9 +9,9 @@ import {
   Sparkles,
   Monitor,
   Smartphone,
-  Layers,
   AlertCircle,
   RefreshCw,
+  Send,
 } from "lucide-react";
 
 const N8N_WEBHOOK_URL = "https://webhook.monarcahub.com/webhook/midias";
@@ -40,10 +40,18 @@ export default function MidiasAppPage({ supabaseClient, userId, onBack, hasMedia
   const [credits, setCredits] = useState(0);
   const [history, setHistory] = useState([]);
 
-  const [prompt, setPrompt] = useState("");
+  const [messages, setMessages] = useState([
+    {
+      role: "assistant",
+      content:
+        "Me diga o que você quer criar e eu gero a arte + legenda no seu estilo. Você só precisa configurar sua marca uma vez na aba \"Marca\".",
+    },
+  ]);
+  const [inputValue, setInputValue] = useState("");
+  const messagesEndRef = useRef(null);
+
   const [selectedFormat, setSelectedFormat] = useState("quadrado");
   const [generating, setGenerating] = useState(false);
-  const [generatedResult, setGeneratedResult] = useState(null);
 
   const [activeTab, setActiveTab] = useState("gerar");
 
@@ -62,8 +70,8 @@ export default function MidiasAppPage({ supabaseClient, userId, onBack, hasMedia
   const formats = useMemo(
     () => [
       { id: "quadrado", label: "Quadrado", icon: Monitor },
+      { id: "retrato_4x5", label: "Retrato (4:5)", icon: Monitor },
       { id: "story", label: "Story", icon: Smartphone },
-      { id: "carrossel", label: "Carrossel", icon: Layers },
     ],
     [],
   );
@@ -234,12 +242,20 @@ export default function MidiasAppPage({ supabaseClient, userId, onBack, hasMedia
     }));
   };
 
-  const handleGenerate = async () => {
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const generateFromPrompt = async (userPrompt) => {
     if (!supabaseClient || !userId) {
       setErrorMsg("Você precisa estar logado.");
       return;
     }
-    if (!prompt.trim()) return;
+    if (!String(userPrompt || "").trim()) return;
     if (!canUse) return;
 
     if (credits <= 0) {
@@ -249,7 +265,6 @@ export default function MidiasAppPage({ supabaseClient, userId, onBack, hasMedia
 
     setGenerating(true);
     setErrorMsg("");
-    setGeneratedResult(null);
 
     try {
       // 1) chama webhook
@@ -258,7 +273,7 @@ export default function MidiasAppPage({ supabaseClient, userId, onBack, hasMedia
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           user_id: userId,
-          prompt: prompt.trim(),
+          prompt: String(userPrompt).trim(),
           format: selectedFormat,
           brand: {
             ...brandData,
@@ -276,7 +291,15 @@ export default function MidiasAppPage({ supabaseClient, userId, onBack, hasMedia
         throw new Error("Resposta do webhook inválida. Esperado { image, caption }.");
       }
 
-      setGeneratedResult({ image: json.image || "", caption: json.caption || "" });
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: json.caption || "",
+          image: json.image || "",
+          meta: { format: selectedFormat },
+        },
+      ]);
 
       // 2) consome crédito via RPC
       const { error: rpcErr } = await supabaseClient.rpc("consume_credits", {
@@ -292,6 +315,19 @@ export default function MidiasAppPage({ supabaseClient, userId, onBack, hasMedia
     } finally {
       setGenerating(false);
     }
+  };
+
+  const handleSend = async (e) => {
+    e.preventDefault();
+    if (!canUse || generating) return;
+
+    const text = inputValue.trim();
+    if (!text) return;
+
+    setMessages((prev) => [...prev, { role: "user", content: text }]);
+    setInputValue("");
+
+    await generateFromPrompt(text);
   };
 
   if (!hasMediaUpgrade) {
@@ -626,54 +662,73 @@ export default function MidiasAppPage({ supabaseClient, userId, onBack, hasMedia
                       );
                     })}
                   </div>
-                </div>
-
-                <div className="rounded-2xl border border-border bg-background/40 p-4">
-                  <div className="text-xs text-muted-foreground">Prompt</div>
-                  <textarea
-                    value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
-                    className="mt-2 w-full min-h-[120px] rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-                    placeholder="Ex.: Crie um post sobre promoção de verão, com CTA para WhatsApp..."
-                    disabled={!canUse}
-                  />
-
-                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-                    <div className="text-xs text-muted-foreground">
-                      1 crédito por geração. {brandData.logo_url ? "Logo ok" : "Sem logo"} · {brandData.reference_images.length}/3 refs
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleGenerate}
-                      disabled={generating || !prompt.trim() || !canUse}
-                      className="h-10 px-5 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm disabled:opacity-60 disabled:cursor-not-allowed"
-                    >
-                      {generating ? "Gerando…" : "Gerar"}
-                    </button>
+                  <div className="mt-3 text-xs text-muted-foreground">
+                    1 crédito por geração. {brandData.logo_url ? "Logo ok" : "Sem logo"} · {brandData.reference_images.length}/3
+                    refs
                   </div>
                 </div>
 
-                {generatedResult && (
-                  <div className="rounded-2xl border border-border bg-background/40 p-4">
-                    <div className="text-sm font-semibold text-foreground">Resultado</div>
-                    {generatedResult.image ? (
-                      <img
-                        src={generatedResult.image}
-                        alt="Imagem gerada"
-                        className="mt-3 w-full max-h-[520px] object-contain rounded-2xl border border-border"
-                        loading="lazy"
-                      />
-                    ) : null}
-                    {generatedResult.caption ? (
-                      <div className="mt-3 rounded-2xl border border-border bg-card/60 p-4">
-                        <div className="text-xs text-muted-foreground">Legenda</div>
-                        <pre className="mt-2 whitespace-pre-wrap text-sm text-foreground leading-relaxed font-sans">
-                          {generatedResult.caption}
-                        </pre>
+                <section className="rounded-3xl border border-border bg-card/60 overflow-hidden">
+                  <div className="p-4 border-b border-border">
+                    <div className="flex items-center gap-2">
+                      <div className="h-8 w-8 rounded-xl border border-border bg-background/40 flex items-center justify-center">
+                        <Sparkles className="w-4 h-4 text-primary" />
                       </div>
-                    ) : null}
+                      <div>
+                        <h2 className="text-base font-semibold text-foreground">Chat IA Gestor de Mídias</h2>
+                        <p className="text-xs text-muted-foreground">Peça artes e legendas como numa conversa</p>
+                      </div>
+                    </div>
                   </div>
-                )}
+
+                  <div className="flex flex-col h-[560px]">
+                    <div className="flex-1 overflow-y-auto p-5 space-y-4 chat-scroll">
+                      {messages.map((msg, idx) => (
+                        <div key={idx} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                          <div
+                            className={`max-w-[82%] rounded-2xl px-4 py-3 space-y-3 ${
+                              msg.role === "user"
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted/50 text-foreground border border-border"
+                            }`}
+                          >
+                            {msg.image ? (
+                              <img
+                                src={msg.image}
+                                alt="Imagem gerada"
+                                className="w-full max-h-[420px] object-contain rounded-xl border border-border bg-background"
+                                loading="lazy"
+                              />
+                            ) : null}
+                            {msg.content ? <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p> : null}
+                          </div>
+                        </div>
+                      ))}
+                      <div ref={messagesEndRef} />
+                    </div>
+
+                    <div className="border-t border-border p-4 bg-background/40">
+                      <form onSubmit={handleSend} className="flex gap-2">
+                        <input
+                          type="text"
+                          value={inputValue}
+                          onChange={(e) => setInputValue(e.target.value)}
+                          disabled={!canUse}
+                          placeholder={canUse ? "Descreva a arte que você quer..." : "Upgrade necessário"}
+                          className="flex-1 rounded-full border border-border bg-background px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                        />
+                        <button
+                          type="submit"
+                          disabled={!canUse || generating || !inputValue.trim()}
+                          className="h-10 w-10 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Enviar"
+                        >
+                          {generating ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                </section>
               </div>
             )}
           </div>

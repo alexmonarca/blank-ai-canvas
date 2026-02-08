@@ -1894,15 +1894,19 @@ function Dashboard({ session }) {
         );
 
       case "midias":
-        return (
-          <MidiasPage
-            onOpenPlansTab={() => setActiveTab("plans")}
-            onOpenMidiasApp={() => setActiveTab("midias_app")}
+        // Para contas com upgrade, abre o módulo completo direto na aba MídIAs.
+        return gymData.ia_gestor_midias ? (
+          <MidiasAppPage
+            supabaseClient={supabaseClient}
+            userId={userId}
             hasMediaUpgrade={gymData.ia_gestor_midias}
           />
+        ) : (
+          <MidiasPage onOpenPlansTab={() => setActiveTab("plans")} hasMediaUpgrade={gymData.ia_gestor_midias} />
         );
 
       case "midias_app":
+        // Mantido por compatibilidade (links antigos / estados antigos).
         return (
           <MidiasAppPage
             supabaseClient={supabaseClient}
