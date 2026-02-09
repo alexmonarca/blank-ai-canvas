@@ -2257,10 +2257,14 @@ function Dashboard({ session }) {
                     icon={Mic}
                     label="Responder áudio?"
                     subLabel="IA ouve áudio e responde também em áudio. Se desativado sempre responderá em texto."
-                    checked={gymData.reply_audio}
+                    checked={
+                      displayPlanName === "Trial Grátis" || displayPlanName === "Plano Start"
+                        ? false
+                        : gymData.reply_audio
+                    }
                     onChange={(val) => setGymData({ ...gymData, reply_audio: val })}
-                    disabled={subscriptionInfo?.plan_type === "trial_7_days"}
-                    locked={subscriptionInfo?.plan_type === "trial_7_days"}
+                    disabled={displayPlanName === "Trial Grátis" || displayPlanName === "Plano Start"}
+                    locked={displayPlanName === "Trial Grátis" || displayPlanName === "Plano Start"}
                     onLockedClick={() => setActiveTab("plans")}
                   />
                   <CheckboxGroup
