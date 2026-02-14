@@ -135,6 +135,8 @@ export default function MidiasAppPage({
   userId,
   onBack,
   onOpenPlansTab,
+  onOpenConnectionsTab,
+  onOpenInstagramConnect,
   hasMediaUpgrade = false,
   selectedCreditsPack = 0,
 }) {
