@@ -960,11 +960,40 @@ export default function MidiasAppPage({
           </div>
 
           <div className="rounded-3xl border border-border bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/50 p-5">
-            <div className="text-sm font-semibold text-foreground">Requisito do Storage</div>
+            <div className="text-sm font-semibold text-foreground">Postar agora / Agendar</div>
             <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-              Este módulo usa o bucket <span className="text-foreground font-mono">{STORAGE_BUCKET}</span>. Se o bucket não for
-              público, troque para URL assinada (signed URL) no backend.
+              Para postar ou agendar publicações direto por aqui, conecte seu <span className="text-foreground">Instagram API (Meta)</span>.
+              Cada <span className="text-foreground">postagem</span> ou <span className="text-foreground">agendamento</span> consome{" "}
+              <span className="text-foreground font-semibold">20 créditos</span>.
             </p>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={credits > 0 ? onOpenInstagramConnect : undefined}
+                disabled={credits <= 0 || !onOpenInstagramConnect}
+                className="h-10 px-4 rounded-full border border-border bg-background/40 text-foreground hover:bg-background/60 transition-colors text-sm inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                title={credits <= 0 ? "Disponível quando você tiver créditos" : "Conectar Instagram API (Meta)"}
+              >
+                {credits <= 0 ? <AlertCircle className="w-4 h-4" /> : <ImageIcon className="w-4 h-4" />}
+                Conectar Instagram (Meta)
+              </button>
+
+              <button
+                type="button"
+                onClick={onOpenConnectionsTab}
+                disabled={!onOpenConnectionsTab}
+                className="h-10 px-4 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                Ir para Conexões
+              </button>
+            </div>
+
+            {credits <= 0 && (
+              <div className="mt-3 text-xs text-muted-foreground">
+                Dica: compre um pacote em <span className="text-foreground">Assinatura</span> para liberar a conexão e começar a postar/agendar.
+              </div>
+            )}
           </div>
         </aside>
       </div>
