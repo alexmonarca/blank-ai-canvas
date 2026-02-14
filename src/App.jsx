@@ -2029,6 +2029,12 @@ function Dashboard({ session }) {
             hasMediaUpgrade={hasMidiasUpgrade}
             selectedCreditsPack={extraCreditsPack}
             onOpenPlansTab={() => setActiveTab("plans")}
+            onOpenConnectionsTab={() => setActiveTab("connections")}
+            onOpenInstagramConnect={() => {
+              setActiveTab("connections");
+              // Dispara o mesmo fluxo do botão "Conectar Instagram" da aba Conexões
+              handleMetaEmbeddedSignup?.({ mode: "instagram" });
+            }}
           />
         );
 
