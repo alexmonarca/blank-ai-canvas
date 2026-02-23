@@ -1,5 +1,6 @@
 // Update v1.719
 import React, { useState, useEffect, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import AdminTrialPanel from "./components/admin/AdminTrialPanel.jsx";
 import HomeAIStart from "./components/HomeAIStart.jsx";
 import ConnectionsPage from "./components/ConnectionsPage.jsx";
@@ -8,6 +9,7 @@ import MidiasAppPage from "./components/MidiasAppPage.jsx";
 import LandingPage from "./components/LandingPage.jsx";
 import { supabase as supabaseClient } from "@/lib/supabaseClient";
 import { env } from "@/config/env";
+
 import {
   Dumbbell,
   MessageSquare,
@@ -980,10 +982,65 @@ export default function App() {
 }
 
 function Dashboard({ session }) {
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const tabToPath = (tab) => {
+    switch (tab) {
+      case "dashboard":
+        return "/";
+      case "training":
+        return "/treinar-ia";
+      case "connections":
+        return "/conexoes";
+      case "midias":
+        return "/midias";
+      case "midias_app":
+        return "/midias/app";
+      case "plans":
+        return "/assinatura";
+      case "account":
+        return "/minha-conta";
+      case "admin":
+        return "/admin";
+      default:
+        return "/";
+    }
+  };
+
+  const pathToTab = (pathname) => {
+    const path = String(pathname || "").toLowerCase();
+    if (path === "/") return "dashboard";
+    if (path === "/treinar-ia") return "training";
+    if (path === "/conexoes") return "connections";
+    if (path === "/midias") return "midias";
+    if (path === "/midias/app") return "midias_app";
+    if (path === "/assinatura") return "plans";
+    if (path === "/minha-conta") return "account";
+    if (path === "/admin") return "admin";
+    return null;
+  };
+
+  const [activeTab, _setActiveTab] = useState(() => pathToTab(location.pathname) || "dashboard");
+  const setActiveTab = (tab) => {
+    _setActiveTab(tab);
+    navigate(tabToPath(tab));
+  };
+
+  useEffect(() => {
+    const next = pathToTab(location.pathname);
+    if (!next) {
+      navigate("/", { replace: true });
+      _setActiveTab("dashboard");
+      return;
+    }
+    _setActiveTab(next);
+  }, [location.pathname]);
+
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
 
   const isSuperAdmin = session.user.email.trim().toLowerCase() === SUPER_ADMIN_EMAIL.trim().toLowerCase();
   const userId = session.user.id;
