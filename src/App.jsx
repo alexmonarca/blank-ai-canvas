@@ -2030,6 +2030,17 @@ function Dashboard({ session }) {
     { id: "account", icon: User, label: "Minha Conta" },
   ];
 
+  const openMidias = () => {
+    // Regra: se tiver créditos, manda para o app externo (mesma aba).
+    // Se não tiver, mantém o fluxo atual (/midias).
+    if ((creditsBalance || 0) > 0) {
+      window.location.assign("https://midias.monarcahub.com/");
+      return;
+    }
+
+    setActiveTab("midias");
+  };
+
   const renderContent = () => {
     if (isLoadingData)
       return (
@@ -2958,7 +2969,7 @@ function Dashboard({ session }) {
             <Smartphone className="w-5 h-5" /> Conexões
           </button>
           <button
-            onClick={() => setActiveTab("midias")}
+            onClick={openMidias}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeTab === "midias" ? "bg-orange-500/10 text-orange-400" : "text-gray-400 hover:bg-gray-800 hover:text-white"}`}
           >
             <ImageIcon className="w-5 h-5" /> MídIAs
@@ -3029,7 +3040,11 @@ function Dashboard({ session }) {
               <button
                 key={item.id}
                 onClick={() => {
-                  setActiveTab(item.id);
+                  if (item.id === "midias") {
+                    openMidias();
+                  } else {
+                    setActiveTab(item.id);
+                  }
                   setMobileMenuOpen(false);
                 }}
                 className={`w-full flex items-center gap-4 px-6 py-4 rounded-xl text-lg font-medium transition-colors ${activeTab === item.id ? "bg-orange-500/10 text-orange-400 border border-orange-500/20" : "text-gray-400 hover:bg-gray-800 hover:text-white"}`}
