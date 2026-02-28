@@ -1895,9 +1895,11 @@ function Dashboard({ session }) {
           ? META_CONFIG_ID_INSTAGRAM
           : META_CONFIG_ID_BOTH;
 
-    // Se o WhatsApp estiver conectado via MonarcaHub, precisamos deslogar a instância
+    // Se o WhatsApp estiver conectado via MonarcaHub, normalmente precisamos deslogar a instância
     // antes de iniciar a API Oficial; caso contrário, o número pode ficar "ocupado".
-    if (connectionStatus === "connected") {
+    // EXCEÇÃO: no modo coexistência, NÃO desconectamos o MonarcaHub.
+    const isCoexistencia = Boolean(gymData?.use_official_api_coexistencia);
+    if (!isCoexistencia && connectionStatus === "connected") {
       const proceed = confirm(
         "Para conectar via API Oficial, vamos desconectar primeiro a instância atual (MonarcaHub). Deseja continuar?",
       );
