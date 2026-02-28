@@ -1954,9 +1954,22 @@ function Dashboard({ session }) {
             return;
           }
 
+          // IMPORTANTE (coexistência): não enviar confirmação instantânea.
+          // No modo coexistência, o usuário pode ainda estar finalizando o Embedded Signup.
+          // Então NÃO disparamos o webhook 'meta_connected' nem marcamos como conectado aqui.
+          const isCoexistencia = Boolean(gymData?.use_official_api_coexistencia);
+          if (isCoexistencia) {
+            console.log("Meta login OK (coexistência). Aguardando confirmação real do Embedded Signup.");
+            alert(
+              "✅ Login concluído. Agora finalize o Embedded Signup e aguarde a confirmação da conexão. " +
+                "Quando estiver pronto, o status será atualizado automaticamente."
+            );
+            return;
+          }
+
           console.log("Sucesso Meta:", response);
 
-          // Envia dados para o webhook do n8n
+          // Envia dados para o webhook do n8n (somente quando NÃO for coexistência)
           fetch(WEBHOOK_META_SETUP_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
