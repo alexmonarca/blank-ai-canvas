@@ -788,8 +788,14 @@ const AuthScreen = ({ onLogin, initialMode = "login", onBackToLanding }) => {
   const [error, setError] = useState("");
   const handleAuth = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError("");
+
+    if (isSignUp && !/[A-Z]/.test(password)) {
+      setError("A senha deve conter ao menos 1 letra maiúscula.");
+      return;
+    }
+
+    setLoading(true);
     if (!supabaseClient) {
       setError("Erro: Supabase não iniciado.");
       setLoading(false);
@@ -876,6 +882,7 @@ const AuthScreen = ({ onLogin, initialMode = "login", onBackToLanding }) => {
             label="Senha"
             type="password"
             required
+            helpText={isSignUp ? "A senha deve conter ao menos 1 letra maiúscula." : undefined}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />{" "}
