@@ -1532,6 +1532,44 @@ function Dashboard({ session }) {
     fetchData();
   }, [userId, session.user.email]);
 
+  useEffect(() => {
+    let mounted = true;
+
+    const syncCredits = async () => {
+      const nextBalance = await fetchCreditsBalance();
+      if (!mounted || nextBalance === null) return;
+    };
+
+    syncCredits();
+    const intervalId = window.setInterval(syncCredits, 15000);
+    const handleFocus = () => syncCredits();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") syncCredits();
+    };
+
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      mounted = false;
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [userId]);
+
+  useEffect(() => {
+    if (activeTab !== "midias") {
+      midiasRedirectingRef.current = false;
+      return;
+    }
+
+    if ((creditsBalance || 0) <= 0 || midiasRedirectingRef.current) return;
+
+    midiasRedirectingRef.current = true;
+    window.location.assign("https://midias.monarcahub.com/");
+  }, [activeTab, creditsBalance]);
+
   // NOVO: Função para PATCH (atualizar apenas campos específicos)
   // Evita sobrescrever dados do treinamento durante autosaves de conexão/IA
   const handlePartialSave = async (fieldsToUpdate) => {
