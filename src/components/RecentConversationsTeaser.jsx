@@ -100,7 +100,9 @@ export default function RecentConversationsTeaser({ onOpenPlans, hasOmnichannel 
           <div className="min-w-0">
             <div className="text-sm font-semibold text-foreground">Chat — ver últimas conversas</div>
             <p className="mt-1 text-xs text-muted-foreground">
-               Pause IA por conversa e veja Instagram (Preview Painel Omnichannel).
+              {hasOmnichannel
+                ? "Abra o Painel de Conversas dentro do popup (chat.monarcahub.com)."
+                : "Pause IA por conversa e veja Instagram (Preview Painel Omnichannel)."}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
