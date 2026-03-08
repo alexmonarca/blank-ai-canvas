@@ -767,7 +767,7 @@ export default function HomeAIStart({
         </div>
 
         {shouldShowRecentConversationsTeaser && (
-          <RecentConversationsTeaser onOpenPlans={onOpenPlansTab} />
+          <RecentConversationsTeaser onOpenPlans={onOpenPlansTab} hasOmnichannel={hasOmnichannel} />
         )}
 
         {isUpgradeModalOpen && (

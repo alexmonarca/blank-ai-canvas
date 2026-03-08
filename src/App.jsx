@@ -2127,6 +2127,7 @@ function Dashboard({ session }) {
               planName={displayPlanName === "Trial Grátis" ? "Plano GRATUITO" : displayPlanName}
               trialExpired={subscriptionInfo?.plan_type === "trial_7_days" && trialInfo?.status === "expired"}
               isTrialPlan={displayPlanName === "Trial Grátis" || subscriptionInfo?.plan_type === "trial_7_days"}
+              hasOmnichannel={Boolean(gymData.omnichannel)}
               wantsOfficialApi={Boolean(gymData.use_official_api_coexistencia || gymData.use_official_api_somente)}
               onOpenPlansTab={() => setActiveTab("plans")}
               onOpenTrainTab={() => setActiveTab("training")}
