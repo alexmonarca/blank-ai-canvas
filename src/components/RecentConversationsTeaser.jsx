@@ -70,7 +70,7 @@ export default function RecentConversationsTeaser({ onOpenPlans, hasOmnichannel 
     return () => {
       alive = false;
     };
-  }, [open]);
+  }, [open, hasOmnichannel]);
 
   const customers = useMemo(() => {
     const map = new Map();
