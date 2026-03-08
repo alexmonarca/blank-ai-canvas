@@ -23,7 +23,7 @@ function getInitials(nameOrPhone) {
   return (a + b).toUpperCase();
 }
 
-export default function RecentConversationsTeaser({ onOpenPlans }) {
+export default function RecentConversationsTeaser({ onOpenPlans, hasOmnichannel = false }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
