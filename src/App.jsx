@@ -1091,6 +1091,21 @@ function Dashboard({ session }) {
 
   const [isTestModeOpen, setIsTestModeOpen] = useState(false);
   const [isOfficialApiOpen, setIsOfficialApiOpen] = useState(false);
+  const midiasRedirectingRef = useRef(false);
+
+  const fetchCreditsBalance = async () => {
+    const { data: pData, error: pErr } = await supabaseClient
+      .from("profiles")
+      .select("credits_balance")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (pErr) return null;
+
+    const nextBalance = pData?.credits_balance ?? 0;
+    setCreditsBalance(nextBalance);
+    return nextBalance;
+  };
 
   // Identificação Chatwoot
   useEffect(() => {
@@ -1478,14 +1493,7 @@ function Dashboard({ session }) {
           setInitialGymData(gymData);
         }
         // Saldo de créditos no perfil (libera MídIAs)
-        {
-          const { data: pData, error: pErr } = await supabaseClient
-            .from("profiles")
-            .select("credits_balance")
-            .eq("id", userId)
-            .maybeSingle();
-          if (!pErr) setCreditsBalance(pData?.credits_balance ?? 0);
-        }
+        await fetchCreditsBalance();
 
         let sub = await supabaseClient
           .from("subscriptions")
@@ -1523,6 +1531,44 @@ function Dashboard({ session }) {
     };
     fetchData();
   }, [userId, session.user.email]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const syncCredits = async () => {
+      const nextBalance = await fetchCreditsBalance();
+      if (!mounted || nextBalance === null) return;
+    };
+
+    syncCredits();
+    const intervalId = window.setInterval(syncCredits, 15000);
+    const handleFocus = () => syncCredits();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") syncCredits();
+    };
+
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      mounted = false;
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [userId]);
+
+  useEffect(() => {
+    if (activeTab !== "midias") {
+      midiasRedirectingRef.current = false;
+      return;
+    }
+
+    if ((creditsBalance || 0) <= 0 || midiasRedirectingRef.current) return;
+
+    midiasRedirectingRef.current = true;
+    window.location.assign("https://midias.monarcahub.com/");
+  }, [activeTab, creditsBalance]);
 
   // NOVO: Função para PATCH (atualizar apenas campos específicos)
   // Evita sobrescrever dados do treinamento durante autosaves de conexão/IA
