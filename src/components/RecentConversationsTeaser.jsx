@@ -31,7 +31,7 @@ export default function RecentConversationsTeaser({ onOpenPlans, hasOmnichannel 
   const [activeTab, setActiveTab] = useState("whatsapp");
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || hasOmnichannel) return;
     let alive = true;
 
     async function run() {
