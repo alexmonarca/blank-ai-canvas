@@ -1091,6 +1091,21 @@ function Dashboard({ session }) {
 
   const [isTestModeOpen, setIsTestModeOpen] = useState(false);
   const [isOfficialApiOpen, setIsOfficialApiOpen] = useState(false);
+  const midiasRedirectingRef = useRef(false);
+
+  const fetchCreditsBalance = async () => {
+    const { data: pData, error: pErr } = await supabaseClient
+      .from("profiles")
+      .select("credits_balance")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (pErr) return null;
+
+    const nextBalance = pData?.credits_balance ?? 0;
+    setCreditsBalance(nextBalance);
+    return nextBalance;
+  };
 
   // Identificação Chatwoot
   useEffect(() => {
