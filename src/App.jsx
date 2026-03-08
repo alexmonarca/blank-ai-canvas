@@ -1493,14 +1493,7 @@ function Dashboard({ session }) {
           setInitialGymData(gymData);
         }
         // Saldo de créditos no perfil (libera MídIAs)
-        {
-          const { data: pData, error: pErr } = await supabaseClient
-            .from("profiles")
-            .select("credits_balance")
-            .eq("id", userId)
-            .maybeSingle();
-          if (!pErr) setCreditsBalance(pData?.credits_balance ?? 0);
-        }
+        await fetchCreditsBalance();
 
         let sub = await supabaseClient
           .from("subscriptions")
