@@ -24,6 +24,7 @@ export default function HomeAIStart({
   onOpenConnectionsTab,
   planName,
   isTrialPlan,
+  hasOmnichannel = false,
 
   // WhatsApp status (para validar ativação da IA)
   whatsappUnofficialStatus,
