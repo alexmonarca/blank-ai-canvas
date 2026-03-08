@@ -24,6 +24,7 @@ export default function HomeAIStart({
   onOpenConnectionsTab,
   planName,
   isTrialPlan,
+  hasOmnichannel = false,
 
   // WhatsApp status (para validar ativação da IA)
   whatsappUnofficialStatus,
@@ -766,7 +767,7 @@ export default function HomeAIStart({
         </div>
 
         {shouldShowRecentConversationsTeaser && (
-          <RecentConversationsTeaser onOpenPlans={onOpenPlansTab} />
+          <RecentConversationsTeaser onOpenPlans={onOpenPlansTab} hasOmnichannel={hasOmnichannel} />
         )}
 
         {isUpgradeModalOpen && (
