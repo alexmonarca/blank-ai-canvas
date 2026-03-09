@@ -3079,13 +3079,7 @@ function Dashboard({ session }) {
             <p className="text-[10px] text-gray-600 uppercase tracking-wider">Desenvolvido por</p>
             <p className="text-xs text-orange-400 font-bold">Monarca Hub</p>
           </div>
-          <button
-            onClick={async () => {
-              await supabaseClient.auth.signOut();
-              window.location.reload();
-            }}
-            className="w-full flex items-center justify-center gap-2 text-red-400 hover:bg-red-400/10 py-2 rounded-lg transition-colors text-sm"
-          >
+          <button onClick={handleSignOut} className="w-full flex items-center justify-center gap-2 text-red-400 hover:bg-red-400/10 py-2 rounded-lg transition-colors text-sm">
             <LogOut className="w-4 h-4" /> Sair
           </button>
         </div>
