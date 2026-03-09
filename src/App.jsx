@@ -2946,11 +2946,11 @@ function Dashboard({ session }) {
           <div className="max-w-4xl mx-auto animate-in fade-in duration-500">
             <div className="bg-gray-900 border border-orange-500/20 rounded-2xl p-8 shadow-xl">
               <span className="inline-flex items-center gap-2 rounded-full bg-orange-500/10 border border-orange-500/30 px-3 py-1 text-xs font-semibold text-orange-300">
-                <Gift className="w-4 h-4" /> Vagas reais por ciclo
+                <Gift className="w-4 h-4" /> Apenas {partnersSlotsLeft} vagas para {partnersMonthLabel}
               </span>
               <h1 className="mt-4 text-3xl md:text-4xl font-bold text-white">Programa de Parceiros IARA</h1>
               <p className="mt-3 text-gray-300 leading-relaxed">
-                Indique empresas para IARA, receba <strong>15% de comissão recorrente</strong> por cliente ativo e
+                Indique empresas para IARA, receba <strong>10% de comissão recorrente</strong> por cliente ativo e
                 cobre a <strong>taxa de configuração</strong> conforme o porte do negócio.
               </p>
 
@@ -2971,10 +2971,49 @@ function Dashboard({ session }) {
 
               <button
                 type="button"
+                onClick={() => setShowPartnersFaq((prev) => !prev)}
                 className="mt-8 inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-6 py-3 font-semibold text-white hover:bg-orange-600 transition-colors"
               >
-                Quero me inscrever grátis <Rocket className="w-4 h-4" />
+                Quero saber mais {showPartnersFaq ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </button>
+
+              {showPartnersFaq && (
+                <div className="mt-6 space-y-3 border-t border-gray-700/80 pt-6">
+                  {partnersFaqItems.map((item, index) => {
+                    const isOpen = openPartnersFaqIndex === index;
+                    return (
+                      <div key={item.question} className="rounded-xl border border-gray-700 bg-gray-950/70 overflow-hidden">
+                        <button
+                          type="button"
+                          onClick={() => setOpenPartnersFaqIndex(isOpen ? null : index)}
+                          className="w-full flex items-center justify-between gap-3 text-left px-4 py-3 text-gray-100 font-medium"
+                        >
+                          <span>{item.question}</span>
+                          {isOpen ? <ChevronUp className="w-4 h-4 text-orange-300" /> : <ChevronDown className="w-4 h-4 text-orange-300" />}
+                        </button>
+                        {isOpen && <p className="px-4 pb-4 text-sm text-gray-300 leading-relaxed">{item.answer}</p>}
+                      </div>
+                    );
+                  })}
+
+                  <div className="pt-2 flex flex-col sm:flex-row sm:items-center gap-3">
+                    <button
+                      type="button"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-6 py-3 font-semibold text-white hover:bg-orange-600 transition-colors"
+                    >
+                      Quero me inscrever grátis <Rocket className="w-4 h-4" />
+                    </button>
+                    <a
+                      href="https://wa.me/5555996079863"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-green-500/40 bg-green-500/10 px-6 py-3 font-semibold text-green-300 hover:bg-green-500/20 transition-colors"
+                    >
+                      Falar no WhatsApp <MessageCircle className="w-4 h-4" />
+                    </a>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         );
