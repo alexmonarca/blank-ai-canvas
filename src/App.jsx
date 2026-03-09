@@ -86,6 +86,7 @@ const WEBHOOK_SALES_URL = "https://webhook.monarcahub.com/webhook/assinar";
 const WEBHOOK_EVOLUTION_URL = "https://webhook.monarcahub.com/webhook/evo-manager-v4all";
 const WEBHOOK_QR_HTML_URL = "https://webhook.monarcahub.com/webhook/qrcode";
 const WEBHOOK_SIGNUP_SYNC_URL = "https://webhook.monarcahub.com/webhook/signup-sync";
+const WEBHOOK_PARTNERS_URL = "https://webhook.monarcahub.com/webhook/parceiros";
 
 // Configurações do Chatwoot
 const CHATWOOT_BASE_URL = "https://chat.monarcahub.com";
@@ -777,6 +778,94 @@ const OnboardingStepsModal = ({
   );
 };
 
+const PartnersLeadModal = ({
+  isOpen,
+  onClose,
+  formData,
+  onFieldChange,
+  onSubmit,
+  isSubmitting,
+  errorMsg,
+  successMsg,
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in">
+      <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl w-full max-w-xl relative overflow-hidden">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-white bg-gray-800 p-1 rounded-full z-10"
+          aria-label="Fechar formulário"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        <form onSubmit={onSubmit} className="p-6 md:p-8">
+          <h2 className="text-2xl font-bold text-white">Inscrição no Programa de Parceiros</h2>
+          <p className="text-sm text-gray-400 mt-1 mb-6">Preencha os dados para iniciarmos seu acompanhamento.</p>
+
+          <InputGroup
+            label="Nome"
+            value={formData.name}
+            onChange={(e) => onFieldChange("name", e.target.value)}
+            placeholder="Seu nome completo"
+            required
+            disabled={isSubmitting}
+          />
+          <InputGroup
+            label="Email"
+            type="email"
+            value={formData.email}
+            onChange={(e) => onFieldChange("email", e.target.value)}
+            placeholder="voce@empresa.com"
+            required
+            disabled={isSubmitting}
+          />
+          <InputGroup
+            label="Telefone WhatsApp"
+            type="tel"
+            value={formData.whatsapp}
+            onChange={(e) => onFieldChange("whatsapp", e.target.value)}
+            placeholder="(55) 99999-9999"
+            required
+            disabled={isSubmitting}
+          />
+          <InputGroup
+            label="Qual atividade profissional atua atualmente?"
+            value={formData.currentActivity}
+            onChange={(e) => onFieldChange("currentActivity", e.target.value)}
+            placeholder="Ex.: Consultor comercial"
+            required
+            disabled={isSubmitting}
+          />
+          <InputGroup
+            label="Como nos achou?"
+            value={formData.howFound}
+            onChange={(e) => onFieldChange("howFound", e.target.value)}
+            placeholder="Ex.: Indicação, Instagram, Google..."
+            required
+            disabled={isSubmitting}
+          />
+
+          {errorMsg && <p className="text-sm text-red-400 mb-4">{errorMsg}</p>}
+          {successMsg && <p className="text-sm text-green-400 mb-4">{successMsg}</p>}
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button type="button" onClick={onClose} variant="secondary" className="sm:flex-1" disabled={isSubmitting}>
+              Fechar
+            </Button>
+            <Button type="submit" variant="primary" className="sm:flex-1" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              {isSubmitting ? "Enviando..." : "Enviar inscrição"}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 // ==========================================
 // AUTH SCREEN
 // ==========================================
@@ -1105,6 +1194,17 @@ function Dashboard({ session }) {
   const [partnersNow, setPartnersNow] = useState(() => new Date());
   const [showPartnersFaq, setShowPartnersFaq] = useState(false);
   const [openPartnersFaqIndex, setOpenPartnersFaqIndex] = useState(null);
+  const [isPartnersLeadModalOpen, setIsPartnersLeadModalOpen] = useState(false);
+  const [isPartnersLeadSubmitting, setIsPartnersLeadSubmitting] = useState(false);
+  const [partnersLeadError, setPartnersLeadError] = useState("");
+  const [partnersLeadSuccess, setPartnersLeadSuccess] = useState("");
+  const [partnersLeadForm, setPartnersLeadForm] = useState({
+    name: "",
+    email: "",
+    whatsapp: "",
+    currentActivity: "",
+    howFound: "",
+  });
   const midiasRedirectingRef = useRef(false);
 
   useEffect(() => {
@@ -1125,7 +1225,12 @@ function Dashboard({ session }) {
     {
       question: "Como funciona a taxa de configuração?",
       answer:
-        "Você define e cobra a taxa inicial conforme o porte da empresa: Pequeno (R$50–150), Médio (R$151–300) e Grande (R$301–500).",
+        "Você define e cobra a taxa inicial (opcional), ficando com 90% do valor que você cobrar, conforme o porte da empresa: Pequeno (R$50–150), Médio (R$151–300) e Grande (R$301–500).",
+    },
+    {
+      question: "Eu recebo material de divulgação e orientação para conseguir melhores negócios?",
+      answer:
+        "Sim. Temos uma equipe que te dará acompanhamento e disponibilizaremos as melhores estratégias e materiais para você crescer com a gente!",
     },
     {
       question: "Quando o link de afiliação é liberado?",
@@ -2135,6 +2240,121 @@ function Dashboard({ session }) {
     }
   }, []);
 
+  const handlePartnersLeadFieldChange = (field, value) => {
+    setPartnersLeadForm((prev) => ({ ...prev, [field]: value }));
+    if (partnersLeadError) setPartnersLeadError("");
+  };
+
+  const resetPartnersLeadForm = () => {
+    setPartnersLeadForm({
+      name: "",
+      email: "",
+      whatsapp: "",
+      currentActivity: "",
+      howFound: "",
+    });
+    setPartnersLeadError("");
+    setPartnersLeadSuccess("");
+  };
+
+  const handleOpenPartnersLeadModal = () => {
+    resetPartnersLeadForm();
+    setIsPartnersLeadModalOpen(true);
+  };
+
+  const handlePartnersLeadSubmit = async (e) => {
+    e.preventDefault();
+
+    const payload = {
+      name: partnersLeadForm.name.trim(),
+      email: partnersLeadForm.email.trim().toLowerCase(),
+      whatsapp: partnersLeadForm.whatsapp.trim(),
+      currentActivity: partnersLeadForm.currentActivity.trim(),
+      howFound: partnersLeadForm.howFound.trim(),
+    };
+
+    if (!payload.name || payload.name.length < 2) {
+      setPartnersLeadError("Informe um nome válido.");
+      return;
+    }
+
+    const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email);
+    if (!isEmailValid) {
+      setPartnersLeadError("Informe um email válido.");
+      return;
+    }
+
+    const whatsappDigits = payload.whatsapp.replace(/\D/g, "");
+    if (whatsappDigits.length < 10 || whatsappDigits.length > 15) {
+      setPartnersLeadError("Informe um WhatsApp válido com DDD.");
+      return;
+    }
+
+    if (!payload.currentActivity || payload.currentActivity.length < 3) {
+      setPartnersLeadError("Descreva sua atividade profissional atual.");
+      return;
+    }
+
+    if (!payload.howFound || payload.howFound.length < 3) {
+      setPartnersLeadError("Conte como nos achou.");
+      return;
+    }
+
+    try {
+      setIsPartnersLeadSubmitting(true);
+      setPartnersLeadError("");
+      setPartnersLeadSuccess("");
+
+      const dbPayload = {
+        name: payload.name,
+        email: payload.email,
+        whatsapp: whatsappDigits,
+        current_activity: payload.currentActivity,
+        how_found: payload.howFound,
+        source: "partners_page",
+        user_id: userId || null,
+      };
+
+      const { data: insertedLead, error: insertError } = await supabaseClient
+        .from("partner_program_leads")
+        .insert(dbPayload)
+        .select("id")
+        .single();
+
+      if (insertError) throw insertError;
+
+      const webhookResponse = await fetch(WEBHOOK_PARTNERS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...dbPayload,
+          lead_id: insertedLead?.id || null,
+          month: partnersMonthLabel,
+          slots_left: partnersSlotsLeft,
+          created_at: new Date().toISOString(),
+        }),
+      });
+
+      if (!webhookResponse.ok) {
+        throw new Error(`Webhook retornou status ${webhookResponse.status}`);
+      }
+
+      setPartnersLeadForm({
+        name: "",
+        email: "",
+        whatsapp: "",
+        currentActivity: "",
+        howFound: "",
+      });
+      setPartnersLeadSuccess("Inscrição enviada com sucesso! Em breve entraremos em contato.");
+    } catch (error) {
+      console.error("Erro ao enviar inscrição de parceiro:", error);
+      setPartnersLeadError("Não foi possível enviar agora. Tente novamente em instantes.");
+    } finally {
+      setIsPartnersLeadSubmitting(false);
+    }
+  };
+
   const navItems = [
     { id: "dashboard", icon: LayoutDashboard, label: "Visão Geral" },
     { id: "training", icon: BrainCircuit, label: "Treinar IA" },
@@ -2999,6 +3219,7 @@ function Dashboard({ session }) {
                   <div className="pt-2 flex flex-col sm:flex-row sm:items-center gap-3">
                     <button
                       type="button"
+                      onClick={handleOpenPartnersLeadModal}
                       className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-6 py-3 font-semibold text-white hover:bg-orange-600 transition-colors"
                     >
                       Quero me inscrever grátis <Rocket className="w-4 h-4" />
@@ -3416,6 +3637,17 @@ function Dashboard({ session }) {
       />
 
       <VideoModal isOpen={isVideoModalOpen} onClose={() => setIsVideoModalOpen(false)} videoId={TUTORIAL_VIDEO_ID} />
+
+      <PartnersLeadModal
+        isOpen={isPartnersLeadModalOpen}
+        onClose={() => setIsPartnersLeadModalOpen(false)}
+        formData={partnersLeadForm}
+        onFieldChange={handlePartnersLeadFieldChange}
+        onSubmit={handlePartnersLeadSubmit}
+        isSubmitting={isPartnersLeadSubmitting}
+        errorMsg={partnersLeadError}
+        successMsg={partnersLeadSuccess}
+      />
     </div>
   );
 }
