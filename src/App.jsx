@@ -3496,7 +3496,7 @@ function Dashboard({ session }) {
       {/* Mobile Header */}
       <div className="md:hidden bg-gray-900 p-4 border-b border-gray-800 flex justify-between items-center sticky top-0 z-40">
         <div className="flex items-center gap-2 font-bold text-xl text-orange-400">
-          <img src="/logo-iara.png" className="h-8" alt="IARA Gym" /> IARA Gym
+          <img src="/logo-iara.png" className="h-8" alt="Logo IARA" />
         </div>
         <button className="text-gray-300 p-2" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
           {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -3508,7 +3508,7 @@ function Dashboard({ session }) {
         <div className="md:hidden fixed inset-0 z-50 bg-gray-950 animate-in fade-in duration-200">
           <div className="p-4 border-b border-gray-800 flex justify-between items-center bg-gray-900">
             <div className="flex items-center gap-2 font-bold text-xl text-orange-400">
-              <img src="/logo-iara.png" className="h-8" alt="IARA Gym" /> IARA Gym
+              <img src="/logo-iara.png" className="h-8" alt="Logo IARA" />
             </div>
             <button className="text-gray-300 p-2" onClick={() => setMobileMenuOpen(false)}>
               <X className="w-6 h-6" />
