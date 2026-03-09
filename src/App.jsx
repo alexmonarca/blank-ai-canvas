@@ -2906,6 +2906,43 @@ function Dashboard({ session }) {
             </div>
           </div>
         );
+      case "partners":
+        return (
+          <div className="max-w-4xl mx-auto animate-in fade-in duration-500">
+            <div className="bg-gray-900 border border-orange-500/20 rounded-2xl p-8 shadow-xl">
+              <span className="inline-flex items-center gap-2 rounded-full bg-orange-500/10 border border-orange-500/30 px-3 py-1 text-xs font-semibold text-orange-300">
+                <Gift className="w-4 h-4" /> Vagas reais por ciclo
+              </span>
+              <h1 className="mt-4 text-3xl md:text-4xl font-bold text-white">Programa de Parceiros IARA</h1>
+              <p className="mt-3 text-gray-300 leading-relaxed">
+                Indique empresas para IARA, receba <strong>15% de comissão recorrente</strong> por cliente ativo e
+                cobre a <strong>taxa de configuração</strong> conforme o porte do negócio.
+              </p>
+
+              <div className="mt-6 grid gap-3 md:grid-cols-3 text-sm">
+                <div className="rounded-xl border border-gray-700 bg-gray-950 p-4">
+                  <p className="text-orange-300 font-semibold">Pequeno porte</p>
+                  <p className="text-gray-300 mt-1">R$ 50 a R$ 150</p>
+                </div>
+                <div className="rounded-xl border border-gray-700 bg-gray-950 p-4">
+                  <p className="text-orange-300 font-semibold">Médio porte</p>
+                  <p className="text-gray-300 mt-1">R$ 151 a R$ 300</p>
+                </div>
+                <div className="rounded-xl border border-gray-700 bg-gray-950 p-4">
+                  <p className="text-orange-300 font-semibold">Grande porte</p>
+                  <p className="text-gray-300 mt-1">R$ 301 a R$ 500</p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="mt-8 inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-6 py-3 font-semibold text-white hover:bg-orange-600 transition-colors"
+              >
+                Quero me inscrever grátis <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        );
       case "account":
         return (
           <div className="max-w-2xl mx-auto text-center pt-10 animate-in fade-in">
