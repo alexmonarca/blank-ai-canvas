@@ -997,11 +997,15 @@ const AuthScreen = ({ onLogin, initialMode = "login", onBackToLanding }) => {
 };
 
 export default function App() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [session, setSession] = useState(null);
   const [authView, setAuthView] = useState("landing");
 
   // Para deploy (Vercel), usamos o SDK via npm (sem carregar via <script>), então já está disponível.
   const isConfigured = Boolean(env.supabaseUrl && env.supabaseAnonKey);
+  const currentPath = String(location.pathname || "").toLowerCase();
+  const isPublicPartnersRoute = currentPath === "/parceiros" || currentPath === "/pareiros";
 
   // Script FB SDK e Chatwoot
   // - Deslogado (página inicial): expanded_bubble + "Converse com a IARA"
@@ -1063,13 +1067,30 @@ export default function App() {
 
   if (!session) {
     if (authView === "landing") {
+      if (currentPath === "/pareiros") {
+        navigate("/parceiros", { replace: true });
+      }
+
+      if (isPublicPartnersRoute) {
+        return (
+          <PublicPartnersPage
+            onOpenLogin={() => setAuthView("login")}
+            onOpenSignup={() => setAuthView("signup")}
+            onBackToLanding={() => navigate("/")}
+          />
+        );
+      }
+
       return <LandingPage onOpenLogin={() => setAuthView("login")} onOpenSignup={() => setAuthView("signup")} />;
     }
 
     return (
       <AuthScreen
         initialMode={authView}
-        onBackToLanding={() => setAuthView("landing")}
+        onBackToLanding={() => {
+          setAuthView("landing");
+          if (!isPublicPartnersRoute) navigate("/");
+        }}
         onLogin={(sess) => setSession(sess)}
       />
     );
