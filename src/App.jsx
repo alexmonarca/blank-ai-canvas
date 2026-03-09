@@ -3175,6 +3175,15 @@ function Dashboard({ session }) {
 
       {/* Main Content */}
       <main className="flex-1 md:ml-64 min-h-screen relative">
+        {/* Atalho para Programa de Parceiros (somente desktop) */}
+        <button
+          type="button"
+          onClick={() => setActiveTab("partners")}
+          className="hidden md:inline-flex fixed bottom-5 left-[17rem] z-40 items-center gap-2 rounded-full border border-orange-500/30 bg-gray-900/90 px-4 py-2 text-sm font-semibold text-orange-300 shadow-lg shadow-orange-500/10 hover:bg-gray-800 transition-colors"
+        >
+          <Gift className="w-4 h-4" /> Programa de Parceiros
+        </button>
+
         {/* Perfil rápido (somente desktop) */}
         <div className="hidden md:block fixed top-4 right-6 z-50 group">
           <button
