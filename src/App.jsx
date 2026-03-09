@@ -1057,6 +1057,12 @@ export default function App() {
   const currentPath = String(location.pathname || "").toLowerCase();
   const isPublicPartnersRoute = currentPath === "/parceiros" || currentPath === "/pareiros";
 
+  useEffect(() => {
+    if (currentPath === "/pareiros") {
+      navigate("/parceiros", { replace: true });
+    }
+  }, [currentPath, navigate]);
+
   // Script FB SDK e Chatwoot
   // - Deslogado (página inicial): expanded_bubble + "Converse com a IARA"
   // - Logado (plataforma): padrão, sem texto (mais discreto)
