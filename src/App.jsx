@@ -1025,6 +1025,7 @@ function Dashboard({ session }) {
     if (path === "/midias") return "midias";
     if (path === "/midias/app") return "midias_app";
     if (path === "/assinatura") return "plans";
+    if (path === "/parceiros") return "partners";
     if (path === "/minha-conta") return "account";
     if (path === "/admin") return "admin";
     return null;
