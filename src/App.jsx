@@ -1048,6 +1048,14 @@ function Dashboard({ session }) {
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const userEmail = session?.user?.email || "";
+  const userDisplayName = userEmail ? userEmail.split("@")[0] : "Usuário";
+  const userInitial = userDisplayName.charAt(0).toUpperCase();
+
+  const handleSignOut = async () => {
+    await supabaseClient.auth.signOut();
+    window.location.reload();
+  };
 
   const isSuperAdmin = session.user.email.trim().toLowerCase() === SUPER_ADMIN_EMAIL.trim().toLowerCase();
   const userId = session.user.id;
@@ -3071,13 +3079,7 @@ function Dashboard({ session }) {
             <p className="text-[10px] text-gray-600 uppercase tracking-wider">Desenvolvido por</p>
             <p className="text-xs text-orange-400 font-bold">Monarca Hub</p>
           </div>
-          <button
-            onClick={async () => {
-              await supabaseClient.auth.signOut();
-              window.location.reload();
-            }}
-            className="w-full flex items-center justify-center gap-2 text-red-400 hover:bg-red-400/10 py-2 rounded-lg transition-colors text-sm"
-          >
+          <button onClick={handleSignOut} className="w-full flex items-center justify-center gap-2 text-red-400 hover:bg-red-400/10 py-2 rounded-lg transition-colors text-sm">
             <LogOut className="w-4 h-4" /> Sair
           </button>
         </div>
@@ -3122,10 +3124,7 @@ function Dashboard({ session }) {
               </button>
             ))}
             <button
-              onClick={async () => {
-                await supabaseClient.auth.signOut();
-                window.location.reload();
-              }}
+              onClick={handleSignOut}
               className="w-full flex items-center gap-4 px-6 py-4 rounded-xl text-lg font-medium text-red-400 hover:bg-red-500/10 mt-8 border border-red-500/20"
             >
               <LogOut className="w-6 h-6" /> Sair
@@ -3135,7 +3134,59 @@ function Dashboard({ session }) {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 md:ml-64 min-h-screen">
+      <main className="flex-1 md:ml-64 min-h-screen relative">
+        {/* Perfil rápido (somente desktop) */}
+        <div className="hidden md:block fixed top-4 right-6 z-50 group">
+          <button
+            type="button"
+            className="flex items-center gap-2 rounded-full border border-border bg-card/90 backdrop-blur px-3 py-1.5 text-sm text-foreground shadow-lg"
+            aria-label="Abrir menu de perfil"
+          >
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-muted text-foreground font-semibold">
+              {userInitial}
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+              <DollarSign className="w-3 h-3" /> {creditsBalance || 0}
+            </span>
+          </button>
+
+          <div className="absolute right-0 top-full pt-2 w-72 rounded-2xl border border-border bg-card/95 backdrop-blur p-3 shadow-2xl opacity-0 invisible translate-y-1 transition-all duration-150 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0">
+            <div className="flex items-center justify-between rounded-xl border border-border bg-muted/60 p-3">
+              <div>
+                <p className="text-sm font-semibold text-foreground truncate max-w-[140px]">{userDisplayName}</p>
+                <p className="text-xs text-muted-foreground">Plano ativo</p>
+              </div>
+              <span className="inline-flex items-center gap-1 rounded-full border border-border bg-background/60 px-2 py-1 text-xs text-foreground">
+                <DollarSign className="w-3 h-3" /> {creditsBalance || 0}
+              </span>
+            </div>
+
+            <div className="mt-3 space-y-1">
+              <button
+                type="button"
+                onClick={() => setActiveTab("account")}
+                className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+              >
+                <User className="w-4 h-4" /> Minha Conta
+              </button>
+              <button
+                type="button"
+                onClick={openMidias}
+                className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+              >
+                <ImageIcon className="w-4 h-4" /> Créditos para MídIAs
+              </button>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+              >
+                <LogOut className="w-4 h-4" /> Sair
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Tarja de trial (visível em toda a plataforma) */}
         {subscriptionInfo?.plan_type === "trial_7_days" && (
           <div className="sticky top-16 md:top-0 z-30 border-b border-orange-500/20 bg-gray-950/90 backdrop-blur">
