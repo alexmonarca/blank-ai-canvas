@@ -86,6 +86,7 @@ const WEBHOOK_SALES_URL = "https://webhook.monarcahub.com/webhook/assinar";
 const WEBHOOK_EVOLUTION_URL = "https://webhook.monarcahub.com/webhook/evo-manager-v4all";
 const WEBHOOK_QR_HTML_URL = "https://webhook.monarcahub.com/webhook/qrcode";
 const WEBHOOK_SIGNUP_SYNC_URL = "https://webhook.monarcahub.com/webhook/signup-sync";
+const WEBHOOK_PARTNERS_URL = "https://webhook.monarcahub.com/webhook/parceiros";
 
 // Configurações do Chatwoot
 const CHATWOOT_BASE_URL = "https://chat.monarcahub.com";
