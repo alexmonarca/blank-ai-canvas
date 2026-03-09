@@ -3611,8 +3611,8 @@ function Dashboard({ session }) {
         {/* Tarja de trial (visível em toda a plataforma) */}
         {subscriptionInfo?.plan_type === "trial_7_days" && (
           <div className="sticky top-16 md:top-0 z-30 border-b border-orange-500/20 bg-gray-950/90 backdrop-blur">
-            <div className="max-w-6xl mx-auto px-4 md:px-8 lg:px-10 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <div className="flex items-center gap-2 text-sm">
+            <div className="max-w-6xl mx-auto px-4 md:px-8 lg:px-10 py-3 flex flex-col items-center gap-2">
+              <div className="flex items-center justify-center gap-2 text-sm text-center">
                 <Clock className="w-4 h-4 text-orange-400" />
                 <span className="text-gray-200">
                   Seu teste do plano termina em{" "}
@@ -3632,8 +3632,8 @@ function Dashboard({ session }) {
                 )}
               </div>
 
-              {/* Ações (mobile: empilha; desktop: lado a lado) */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2">
+              {/* Ações centralizadas */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-center gap-2">
                 <button
                   type="button"
                   onClick={() => setIsOnboardingModalOpen(true)}
