@@ -778,6 +778,94 @@ const OnboardingStepsModal = ({
   );
 };
 
+const PartnersLeadModal = ({
+  isOpen,
+  onClose,
+  formData,
+  onFieldChange,
+  onSubmit,
+  isSubmitting,
+  errorMsg,
+  successMsg,
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in">
+      <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl w-full max-w-xl relative overflow-hidden">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-white bg-gray-800 p-1 rounded-full z-10"
+          aria-label="Fechar formulário"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        <form onSubmit={onSubmit} className="p-6 md:p-8">
+          <h2 className="text-2xl font-bold text-white">Inscrição no Programa de Parceiros</h2>
+          <p className="text-sm text-gray-400 mt-1 mb-6">Preencha os dados para iniciarmos seu acompanhamento.</p>
+
+          <InputGroup
+            label="Nome"
+            value={formData.name}
+            onChange={(e) => onFieldChange("name", e.target.value)}
+            placeholder="Seu nome completo"
+            required
+            disabled={isSubmitting}
+          />
+          <InputGroup
+            label="Email"
+            type="email"
+            value={formData.email}
+            onChange={(e) => onFieldChange("email", e.target.value)}
+            placeholder="voce@empresa.com"
+            required
+            disabled={isSubmitting}
+          />
+          <InputGroup
+            label="Telefone WhatsApp"
+            type="tel"
+            value={formData.whatsapp}
+            onChange={(e) => onFieldChange("whatsapp", e.target.value)}
+            placeholder="(55) 99999-9999"
+            required
+            disabled={isSubmitting}
+          />
+          <InputGroup
+            label="Qual atividade profissional atua atualmente?"
+            value={formData.currentActivity}
+            onChange={(e) => onFieldChange("currentActivity", e.target.value)}
+            placeholder="Ex.: Consultor comercial"
+            required
+            disabled={isSubmitting}
+          />
+          <InputGroup
+            label="Como nos achou?"
+            value={formData.howFound}
+            onChange={(e) => onFieldChange("howFound", e.target.value)}
+            placeholder="Ex.: Indicação, Instagram, Google..."
+            required
+            disabled={isSubmitting}
+          />
+
+          {errorMsg && <p className="text-sm text-red-400 mb-4">{errorMsg}</p>}
+          {successMsg && <p className="text-sm text-green-400 mb-4">{successMsg}</p>}
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button type="button" onClick={onClose} variant="secondary" className="sm:flex-1" disabled={isSubmitting}>
+              Fechar
+            </Button>
+            <Button type="submit" variant="primary" className="sm:flex-1" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              {isSubmitting ? "Enviando..." : "Enviar inscrição"}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 // ==========================================
 // AUTH SCREEN
 // ==========================================
