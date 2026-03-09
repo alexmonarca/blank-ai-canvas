@@ -2938,7 +2938,7 @@ function Dashboard({ session }) {
                 type="button"
                 className="mt-8 inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-6 py-3 font-semibold text-white hover:bg-orange-600 transition-colors"
               >
-                Quero me inscrever grátis <ArrowRight className="w-4 h-4" />
+                Quero me inscrever grátis <Rocket className="w-4 h-4" />
               </button>
             </div>
           </div>
