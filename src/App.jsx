@@ -3124,10 +3124,7 @@ function Dashboard({ session }) {
               </button>
             ))}
             <button
-              onClick={async () => {
-                await supabaseClient.auth.signOut();
-                window.location.reload();
-              }}
+              onClick={handleSignOut}
               className="w-full flex items-center gap-4 px-6 py-4 rounded-xl text-lg font-medium text-red-400 hover:bg-red-500/10 mt-8 border border-red-500/20"
             >
               <LogOut className="w-6 h-6" /> Sair
