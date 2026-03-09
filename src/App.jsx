@@ -1048,6 +1048,14 @@ function Dashboard({ session }) {
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const userEmail = session?.user?.email || "";
+  const userDisplayName = userEmail ? userEmail.split("@")[0] : "Usuário";
+  const userInitial = userDisplayName.charAt(0).toUpperCase();
+
+  const handleSignOut = async () => {
+    await supabaseClient.auth.signOut();
+    window.location.reload();
+  };
 
   const isSuperAdmin = session.user.email.trim().toLowerCase() === SUPER_ADMIN_EMAIL.trim().toLowerCase();
   const userId = session.user.id;
