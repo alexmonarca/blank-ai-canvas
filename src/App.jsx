@@ -3171,10 +3171,14 @@ function Dashboard({ session }) {
               </button>
               <button
                 type="button"
-                onClick={openMidias}
+                onClick={() => setActiveTab("plans")}
                 className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
               >
-                <ImageIcon className="w-4 h-4" /> Créditos para MídIAs
+                <ImageIcon className="w-4 h-4" />
+                <span>Crédito para MídIAs</span>
+                <span className="ml-auto inline-flex items-center rounded-full border border-border bg-background/60 px-2 py-0.5 text-xs text-muted-foreground">
+                  {creditsBalance || 0}
+                </span>
               </button>
               <button
                 type="button"
