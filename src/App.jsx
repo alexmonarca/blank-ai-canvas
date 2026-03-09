@@ -2339,8 +2339,14 @@ function Dashboard({ session }) {
         throw new Error(`Webhook retornou status ${webhookResponse.status}`);
       }
 
+      setPartnersLeadForm({
+        name: "",
+        email: "",
+        whatsapp: "",
+        currentActivity: "",
+        howFound: "",
+      });
       setPartnersLeadSuccess("Inscrição enviada com sucesso! Em breve entraremos em contato.");
-      resetPartnersLeadForm();
     } catch (error) {
       console.error("Erro ao enviar inscrição de parceiro:", error);
       setPartnersLeadError("Não foi possível enviar agora. Tente novamente em instantes.");
