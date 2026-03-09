@@ -3150,7 +3150,7 @@ function Dashboard({ session }) {
             </span>
           </button>
 
-          <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-border bg-card/95 backdrop-blur p-3 shadow-2xl opacity-0 invisible translate-y-1 transition-all duration-150 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0">
+          <div className="absolute right-0 top-full pt-2 w-72 rounded-2xl border border-border bg-card/95 backdrop-blur p-3 shadow-2xl opacity-0 invisible translate-y-1 transition-all duration-150 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0">
             <div className="flex items-center justify-between rounded-xl border border-border bg-muted/60 p-3">
               <div>
                 <p className="text-sm font-semibold text-foreground truncate max-w-[140px]">{userDisplayName}</p>
