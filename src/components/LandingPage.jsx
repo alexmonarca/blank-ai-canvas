@@ -16,7 +16,7 @@ export default function LandingPage({ onOpenLogin, onOpenSignup }) {
           </div>
 
           <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
-            <a href="/parceiros" className="hover:text-foreground transition-colors">
+            <a href="/pareiros" className="hover:text-foreground transition-colors">
               Programa de Parceiros
             </a>
             <a href="#funcionalidades" className="hover:text-foreground transition-colors">
