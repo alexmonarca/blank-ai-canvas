@@ -3213,6 +3213,7 @@ function Dashboard({ session }) {
                   <div className="pt-2 flex flex-col sm:flex-row sm:items-center gap-3">
                     <button
                       type="button"
+                      onClick={handleOpenPartnersLeadModal}
                       className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-6 py-3 font-semibold text-white hover:bg-orange-600 transition-colors"
                     >
                       Quero me inscrever grátis <Rocket className="w-4 h-4" />
