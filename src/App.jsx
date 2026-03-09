@@ -1006,6 +1006,8 @@ function Dashboard({ session }) {
         return "/midias/app";
       case "plans":
         return "/assinatura";
+      case "partners":
+        return "/parceiros";
       case "account":
         return "/minha-conta";
       case "admin":
