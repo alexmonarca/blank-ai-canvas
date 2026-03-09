@@ -996,6 +996,56 @@ const AuthScreen = ({ onLogin, initialMode = "login", onBackToLanding }) => {
   );
 };
 
+const PublicPartnersPage = ({ onOpenLogin, onOpenSignup, onBackToLanding }) => {
+  return (
+    <div className="min-h-screen bg-gray-950 text-white">
+      <header className="border-b border-gray-800 bg-gray-950/90 backdrop-blur">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
+          <button
+            type="button"
+            onClick={onBackToLanding}
+            className="inline-flex items-center gap-2 text-sm text-gray-300 hover:text-white"
+          >
+            <ArrowLeft className="w-4 h-4" /> Voltar para início
+          </button>
+          <span className="text-sm text-orange-300 font-semibold">Programa de Parceiros IARA</span>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-5xl px-4 py-10">
+        <div className="rounded-2xl border border-orange-500/20 bg-gray-900 p-8 shadow-xl">
+          <h1 className="text-3xl md:text-4xl font-bold">Programa de Parceiros IARA</h1>
+          <p className="mt-3 text-gray-300 leading-relaxed">
+            Esta página é pública para você conhecer o programa. Para se cadastrar, acompanhar materiais e aproveitar
+            todo o potencial de conversão, é importante criar sua conta e conhecer por dentro a plataforma.
+          </p>
+
+          <div className="mt-6 flex flex-col sm:flex-row gap-3">
+            <button
+              type="button"
+              onClick={onOpenSignup}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-6 py-3 font-semibold text-white hover:bg-orange-600 transition-colors"
+            >
+              Criar conta grátis <Rocket className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={onOpenLogin}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-600 bg-gray-800 px-6 py-3 font-semibold text-gray-100 hover:bg-gray-700 transition-colors"
+            >
+              Já tenho conta
+            </button>
+          </div>
+
+          <p className="mt-4 text-sm text-gray-400">
+            Depois de entrar, você poderá concluir sua inscrição no formulário completo e receber o acompanhamento.
+          </p>
+        </div>
+      </main>
+    </div>
+  );
+};
+
 export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
