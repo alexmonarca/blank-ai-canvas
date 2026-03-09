@@ -1194,6 +1194,17 @@ function Dashboard({ session }) {
   const [partnersNow, setPartnersNow] = useState(() => new Date());
   const [showPartnersFaq, setShowPartnersFaq] = useState(false);
   const [openPartnersFaqIndex, setOpenPartnersFaqIndex] = useState(null);
+  const [isPartnersLeadModalOpen, setIsPartnersLeadModalOpen] = useState(false);
+  const [isPartnersLeadSubmitting, setIsPartnersLeadSubmitting] = useState(false);
+  const [partnersLeadError, setPartnersLeadError] = useState("");
+  const [partnersLeadSuccess, setPartnersLeadSuccess] = useState("");
+  const [partnersLeadForm, setPartnersLeadForm] = useState({
+    name: "",
+    email: "",
+    whatsapp: "",
+    currentActivity: "",
+    howFound: "",
+  });
   const midiasRedirectingRef = useRef(false);
 
   useEffect(() => {
@@ -1214,7 +1225,12 @@ function Dashboard({ session }) {
     {
       question: "Como funciona a taxa de configuração?",
       answer:
-        "Você define e cobra a taxa inicial conforme o porte da empresa: Pequeno (R$50–150), Médio (R$151–300) e Grande (R$301–500).",
+        "Você define e cobra a taxa inicial (opcional), ficando com 90% do valor que você cobrar, conforme o porte da empresa: Pequeno (R$50–150), Médio (R$151–300) e Grande (R$301–500).",
+    },
+    {
+      question: "Eu recebo material de divulgação e orientação para conseguir melhores negócios?",
+      answer:
+        "Sim. Temos uma equipe que te dará acompanhamento e disponibilizaremos as melhores estratégias e materiais para você crescer com a gente!",
     },
     {
       question: "Quando o link de afiliação é liberado?",
