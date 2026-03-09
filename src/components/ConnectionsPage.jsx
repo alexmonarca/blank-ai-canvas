@@ -131,15 +131,6 @@ export default function ConnectionsPage({
             </p>
           </div>
 
-          {onOpenPlansTab && (
-            <button
-              type="button"
-              onClick={onOpenPlansTab}
-              className="h-10 px-4 rounded-full border border-border bg-background/40 text-foreground hover:bg-background/60 transition-colors text-sm"
-            >
-              Ver planos / Upgrade
-            </button>
-          )}
         </div>
       </header>
 
