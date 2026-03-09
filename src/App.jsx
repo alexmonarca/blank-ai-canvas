@@ -1102,7 +1102,42 @@ function Dashboard({ session }) {
 
   const [isTestModeOpen, setIsTestModeOpen] = useState(false);
   const [isOfficialApiOpen, setIsOfficialApiOpen] = useState(false);
+  const [partnersNow, setPartnersNow] = useState(() => new Date());
+  const [showPartnersFaq, setShowPartnersFaq] = useState(false);
+  const [openPartnersFaqIndex, setOpenPartnersFaqIndex] = useState(null);
   const midiasRedirectingRef = useRef(false);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setPartnersNow(new Date()), 60 * 60 * 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const partnersMonthName = partnersNow.toLocaleDateString("pt-BR", { month: "long" });
+  const partnersMonthLabel = partnersMonthName.charAt(0).toUpperCase() + partnersMonthName.slice(1);
+  const partnersSlotsLeft = Math.max(1, 6 - partnersNow.getDate());
+
+  const partnersFaqItems = [
+    {
+      question: "Como funciona a comissão recorrente?",
+      answer:
+        "Você recebe 10% mensais sobre o valor recorrente de cada cliente ativo que entrou pelo seu link de afiliação.",
+    },
+    {
+      question: "Como funciona a taxa de configuração?",
+      answer:
+        "Você define e cobra a taxa inicial conforme o porte da empresa: Pequeno (R$50–150), Médio (R$151–300) e Grande (R$301–500).",
+    },
+    {
+      question: "Quando o link de afiliação é liberado?",
+      answer:
+        "Após o pagamento da taxa de configuração pelo potencial cliente, você libera o link de afiliação para concluir a entrada como novo cliente.",
+    },
+    {
+      question: "Há limite real de vagas?",
+      answer:
+        "Sim. As vagas são limitadas por mês e exibidas automaticamente na página para manter transparência no ciclo atual.",
+    },
+  ];
 
   const fetchCreditsBalance = async () => {
     const { data: pData, error: pErr } = await supabaseClient
