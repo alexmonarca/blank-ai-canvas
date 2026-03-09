@@ -3134,7 +3134,59 @@ function Dashboard({ session }) {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 md:ml-64 min-h-screen">
+      <main className="flex-1 md:ml-64 min-h-screen relative">
+        {/* Perfil rápido (somente desktop) */}
+        <div className="hidden md:block fixed top-4 right-6 z-50 group">
+          <button
+            type="button"
+            className="flex items-center gap-2 rounded-full border border-border bg-card/90 backdrop-blur px-3 py-1.5 text-sm text-foreground shadow-lg"
+            aria-label="Abrir menu de perfil"
+          >
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-muted text-foreground font-semibold">
+              {userInitial}
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+              <DollarSign className="w-3 h-3" /> {creditsBalance || 0}
+            </span>
+          </button>
+
+          <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-border bg-card/95 backdrop-blur p-3 shadow-2xl opacity-0 invisible translate-y-1 transition-all duration-150 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0">
+            <div className="flex items-center justify-between rounded-xl border border-border bg-muted/60 p-3">
+              <div>
+                <p className="text-sm font-semibold text-foreground truncate max-w-[140px]">{userDisplayName}</p>
+                <p className="text-xs text-muted-foreground">Plano ativo</p>
+              </div>
+              <span className="inline-flex items-center gap-1 rounded-full border border-border bg-background/60 px-2 py-1 text-xs text-foreground">
+                <DollarSign className="w-3 h-3" /> {creditsBalance || 0}
+              </span>
+            </div>
+
+            <div className="mt-3 space-y-1">
+              <button
+                type="button"
+                onClick={() => setActiveTab("account")}
+                className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+              >
+                <User className="w-4 h-4" /> Minha Conta
+              </button>
+              <button
+                type="button"
+                onClick={openMidias}
+                className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+              >
+                <ImageIcon className="w-4 h-4" /> Créditos para MídIAs
+              </button>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+              >
+                <LogOut className="w-4 h-4" /> Sair
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Tarja de trial (visível em toda a plataforma) */}
         {subscriptionInfo?.plan_type === "trial_7_days" && (
           <div className="sticky top-16 md:top-0 z-30 border-b border-orange-500/20 bg-gray-950/90 backdrop-blur">
