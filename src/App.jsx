@@ -1123,10 +1123,6 @@ export default function App() {
 
   if (!session) {
     if (authView === "landing") {
-      if (currentPath === "/pareiros") {
-        navigate("/parceiros", { replace: true });
-      }
-
       if (isPublicPartnersRoute) {
         return (
           <PublicPartnersPage
