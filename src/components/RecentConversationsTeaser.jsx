@@ -136,7 +136,7 @@ export default function RecentConversationsTeaser({ onOpenPlans, hasOmnichannel 
                 </div>
                 <div className="text-xs text-muted-foreground">
                   {hasOmnichannel
-                    ? "Visualização do Chatwoot dentro do painel."
+                    ? "Visualização do MonarChat dentro do painel."
                     : "Demonstração do Painel Omnichannel — alguns controles são bloqueados."}
                 </div>
               </div>
