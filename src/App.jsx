@@ -2240,6 +2240,115 @@ function Dashboard({ session }) {
     }
   }, []);
 
+  const handlePartnersLeadFieldChange = (field, value) => {
+    setPartnersLeadForm((prev) => ({ ...prev, [field]: value }));
+    if (partnersLeadError) setPartnersLeadError("");
+  };
+
+  const resetPartnersLeadForm = () => {
+    setPartnersLeadForm({
+      name: "",
+      email: "",
+      whatsapp: "",
+      currentActivity: "",
+      howFound: "",
+    });
+    setPartnersLeadError("");
+    setPartnersLeadSuccess("");
+  };
+
+  const handleOpenPartnersLeadModal = () => {
+    resetPartnersLeadForm();
+    setIsPartnersLeadModalOpen(true);
+  };
+
+  const handlePartnersLeadSubmit = async (e) => {
+    e.preventDefault();
+
+    const payload = {
+      name: partnersLeadForm.name.trim(),
+      email: partnersLeadForm.email.trim().toLowerCase(),
+      whatsapp: partnersLeadForm.whatsapp.trim(),
+      currentActivity: partnersLeadForm.currentActivity.trim(),
+      howFound: partnersLeadForm.howFound.trim(),
+    };
+
+    if (!payload.name || payload.name.length < 2) {
+      setPartnersLeadError("Informe um nome válido.");
+      return;
+    }
+
+    const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email);
+    if (!isEmailValid) {
+      setPartnersLeadError("Informe um email válido.");
+      return;
+    }
+
+    const whatsappDigits = payload.whatsapp.replace(/\D/g, "");
+    if (whatsappDigits.length < 10 || whatsappDigits.length > 15) {
+      setPartnersLeadError("Informe um WhatsApp válido com DDD.");
+      return;
+    }
+
+    if (!payload.currentActivity || payload.currentActivity.length < 3) {
+      setPartnersLeadError("Descreva sua atividade profissional atual.");
+      return;
+    }
+
+    if (!payload.howFound || payload.howFound.length < 3) {
+      setPartnersLeadError("Conte como nos achou.");
+      return;
+    }
+
+    try {
+      setIsPartnersLeadSubmitting(true);
+      setPartnersLeadError("");
+      setPartnersLeadSuccess("");
+
+      const dbPayload = {
+        name: payload.name,
+        email: payload.email,
+        whatsapp: whatsappDigits,
+        current_activity: payload.currentActivity,
+        how_found: payload.howFound,
+        source: "partners_page",
+        user_id: userId || null,
+      };
+
+      const { data: insertedLead, error: insertError } = await supabaseClient
+        .from("partner_program_leads")
+        .insert(dbPayload)
+        .select("id")
+        .single();
+
+      if (insertError) throw insertError;
+
+      const webhookResponse = await fetch(WEBHOOK_PARTNERS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...dbPayload,
+          lead_id: insertedLead?.id || null,
+          month: partnersMonthLabel,
+          slots_left: partnersSlotsLeft,
+          created_at: new Date().toISOString(),
+        }),
+      });
+
+      if (!webhookResponse.ok) {
+        throw new Error(`Webhook retornou status ${webhookResponse.status}`);
+      }
+
+      setPartnersLeadSuccess("Inscrição enviada com sucesso! Em breve entraremos em contato.");
+      resetPartnersLeadForm();
+    } catch (error) {
+      console.error("Erro ao enviar inscrição de parceiro:", error);
+      setPartnersLeadError("Não foi possível enviar agora. Tente novamente em instantes.");
+    } finally {
+      setIsPartnersLeadSubmitting(false);
+    }
+  };
+
   const navItems = [
     { id: "dashboard", icon: LayoutDashboard, label: "Visão Geral" },
     { id: "training", icon: BrainCircuit, label: "Treinar IA" },
