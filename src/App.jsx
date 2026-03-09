@@ -3631,6 +3631,17 @@ function Dashboard({ session }) {
       />
 
       <VideoModal isOpen={isVideoModalOpen} onClose={() => setIsVideoModalOpen(false)} videoId={TUTORIAL_VIDEO_ID} />
+
+      <PartnersLeadModal
+        isOpen={isPartnersLeadModalOpen}
+        onClose={() => setIsPartnersLeadModalOpen(false)}
+        formData={partnersLeadForm}
+        onFieldChange={handlePartnersLeadFieldChange}
+        onSubmit={handlePartnersLeadSubmit}
+        isSubmitting={isPartnersLeadSubmitting}
+        errorMsg={partnersLeadError}
+        successMsg={partnersLeadSuccess}
+      />
     </div>
   );
 }
