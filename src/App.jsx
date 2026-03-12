@@ -633,28 +633,40 @@ const HighTicketModal = ({ isOpen, onClose, total }) => {
   );
 };
 const QrCodeModal = ({ isOpen, onClose, instanceName, connectionStatus, qrCodeBase64, isGenerating }) => {
+  const [qrReadCountdown, setQrReadCountdown] = useState(15);
+
+  useEffect(() => {
+    if (!isOpen || connectionStatus === "connected" || !qrCodeBase64) {
+      setQrReadCountdown(15);
+      return;
+    }
+
+    setQrReadCountdown(15);
+    const interval = setInterval(() => {
+      setQrReadCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isOpen, connectionStatus, qrCodeBase64]);
+
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in">
-      {" "}
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md relative overflow-hidden flex flex-col">
-        {" "}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 bg-gray-200 p-1 rounded-full z-10"
         >
           <X className="w-5 h-5" />
-        </button>{" "}
+        </button>
         <div className="p-6 text-center bg-gray-50 border-b border-gray-200">
-          {" "}
           <h3 className="text-xl font-bold text-gray-800 flex items-center justify-center gap-2">
             <QrCode className="w-6 h-6 text-orange-500" /> Conectar WhatsApp
-          </h3>{" "}
-          <p className="text-sm text-gray-500 mt-1">Abra o WhatsApp &gt; Aparelhos Conectados &gt; Conectar</p>{" "}
-          <p className="text-xs text-orange-400 mt-2 font-mono">ID: {instanceName}</p>{" "}
-        </div>{" "}
+          </h3>
+          <p className="text-sm text-gray-500 mt-1">Abra o WhatsApp &gt; Aparelhos Conectados &gt; Conectar</p>
+          <p className="text-xs text-orange-400 mt-2 font-mono">ID: {instanceName}</p>
+        </div>
         <div className="flex-1 bg-white p-4 flex items-center justify-center min-h-[350px]">
-          {" "}
           {connectionStatus === "connected" ? (
             <div className="text-center">
               <CheckCircle2 className="w-20 h-20 text-green-500 mx-auto mb-4 animate-bounce" />
@@ -663,13 +675,15 @@ const QrCodeModal = ({ isOpen, onClose, instanceName, connectionStatus, qrCodeBa
             </div>
           ) : (
             <div className="w-full flex flex-col items-center justify-center">
-              {" "}
               {qrCodeBase64 ? (
-                <img
-                  src={qrCodeBase64}
-                  alt="QR Code WhatsApp para conectar número"
-                  className="w-64 h-64 object-contain border-4 border-gray-100 rounded-lg"
-                />
+                <>
+                  <img
+                    src={qrCodeBase64}
+                    alt="QR Code WhatsApp para conectar número"
+                    className="w-64 h-64 object-contain border-4 border-gray-100 rounded-lg"
+                  />
+                  <p className="mt-3 text-sm font-medium text-orange-500">Tempo para leitura: {qrReadCountdown}s</p>
+                </>
               ) : isGenerating ? (
                 <div className="text-center">
                   <RefreshCw className="w-12 h-12 text-orange-500 animate-spin mx-auto mb-4" />
@@ -678,12 +692,11 @@ const QrCodeModal = ({ isOpen, onClose, instanceName, connectionStatus, qrCodeBa
                 </div>
               ) : (
                 <div className="text-gray-400 text-sm">Aguardando solicitação...</div>
-              )}{" "}
+              )}
             </div>
-          )}{" "}
-        </div>{" "}
+          )}
+        </div>
         <div className="p-4 bg-gray-100 text-center border-t border-gray-200">
-          {" "}
           {connectionStatus === "connected" ? (
             <Button onClick={onClose} variant="success" className="w-full">
               Fechar e Começar
@@ -692,9 +705,9 @@ const QrCodeModal = ({ isOpen, onClose, instanceName, connectionStatus, qrCodeBa
             <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
               <Loader2 className="w-3 h-3 animate-spin text-orange-500" /> Verificando status automaticamente...
             </div>
-          )}{" "}
-        </div>{" "}
-      </div>{" "}
+          )}
+        </div>
+      </div>
     </div>
   );
 };
