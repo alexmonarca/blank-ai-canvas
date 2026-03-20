@@ -1813,7 +1813,7 @@ function Dashboard({ session }) {
     // Bloqueia se os dados ainda não carregaram completamente
     if (!isDataLoaded) {
       console.warn("Autosave bloqueado: dados ainda não carregados completamente.");
-      return;
+      return false;
     }
 
     try {
@@ -1827,8 +1827,10 @@ function Dashboard({ session }) {
 
       if (error) throw error;
       console.log("PATCH aplicado com sucesso:", fieldsToUpdate);
+      return true;
     } catch (error) {
       console.error("Erro no handlePartialSave:", error);
+      return false;
     }
   };
 
@@ -1922,7 +1924,21 @@ function Dashboard({ session }) {
       return;
     }
 
-    const isWhatsAppConnected = connectionStatus === "connected" || Boolean(gymData.use_official_api);
+    const normalizedConnectionStatus = String(connectionStatus || "").toLowerCase();
+    const normalizedGymConnectionStatus = String(gymData.connection_status || "").toLowerCase();
+    const isWhatsAppConnected =
+      normalizedConnectionStatus === "connected" ||
+      normalizedConnectionStatus === "open" ||
+      normalizedGymConnectionStatus === "connected" ||
+      normalizedGymConnectionStatus === "open" ||
+      Boolean(gymData.use_official_api || gymData.use_official_api_coexistencia || gymData.use_official_api_somente);
+
+    const hasTrainingContent = [
+      gymData.opening_hours,
+      gymData.pricing_info,
+      gymData.faq_text,
+      gymData.observations,
+    ].some((value) => String(value || "").trim().length >= 5);
 
     if (!gymData.ai_active && !isWhatsAppConnected) {
       setTrainingError("Erro: Conecte o WhatsApp (QR Code) primeiro.");
@@ -1930,18 +1946,23 @@ function Dashboard({ session }) {
       return;
     }
 
-    if (!gymData.ai_active) {
-      if (!gymData.opening_hours || gymData.opening_hours.length < 5) {
-        setTrainingError('Erro: Preencha "Treinar IA" primeiro.');
-        setTimeout(() => setTrainingError(""), 5000);
-        return;
-      }
+    if (!gymData.ai_active && !hasTrainingContent) {
+      setTrainingError('Erro: Preencha "Treinar IA" primeiro.');
+      setTimeout(() => setTrainingError(""), 5000);
+      return;
     }
 
     setTrainingError("");
-    const newState = !gymData.ai_active;
+    const previousState = Boolean(gymData.ai_active);
+    const newState = !previousState;
     setGymData((prev) => ({ ...prev, ai_active: newState }));
-    await handlePartialSave({ ai_active: newState, needs_reprocessing: true });
+
+    const saved = await handlePartialSave({ ai_active: newState, needs_reprocessing: true });
+    if (!saved) {
+      setGymData((prev) => ({ ...prev, ai_active: previousState }));
+      setTrainingError("Não foi possível atualizar o status da IA agora. Tente novamente em instantes.");
+      setTimeout(() => setTrainingError(""), 5000);
+    }
   };
   const toggleInstagramAI = async () => {
     if (!gymData.ai_active_instagram && extraChannels < 1) {
