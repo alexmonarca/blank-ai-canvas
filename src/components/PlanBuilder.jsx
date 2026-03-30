@@ -2,16 +2,9 @@ import React, { useMemo, useState } from "react";
 import { Check, ShieldCheck } from "lucide-react";
 
 const BASE_PRICE = 150;
+const SECRETARIA_UNIT_PRICE = 150;
 
 const DEFAULT_OPTIONS = [
-  {
-    key: "secretaria",
-    title: "Secretária",
-    desc: "cuida do atendimento no Whats e Insta",
-    originalPriceLabel: "R$ 1250,00",
-    offerPriceLabel: "R$ 150",
-    price: 150,
-  },
   {
     key: "vendedor",
     title: "Vendedor",
@@ -40,14 +33,20 @@ const DEFAULT_OPTIONS = [
 
 export default function PlanBuilder({ onCta }) {
   const [selected, setSelected] = useState(() => new Set());
+  const [secretariaQty, setSecretariaQty] = useState(1);
+
+  const secretariaExtra = useMemo(() => {
+    const paidUnits = Math.max(0, secretariaQty - 1);
+    return paidUnits * SECRETARIA_UNIT_PRICE;
+  }, [secretariaQty]);
 
   const total = useMemo(() => {
-    let sum = BASE_PRICE;
+    let sum = BASE_PRICE + secretariaExtra;
     for (const opt of DEFAULT_OPTIONS) {
       if (selected.has(opt.key)) sum += opt.price;
     }
     return sum;
-  }, [selected]);
+  }, [selected, secretariaExtra]);
 
   const toggle = (key) => {
     setSelected((prev) => {
@@ -81,6 +80,41 @@ export default function PlanBuilder({ onCta }) {
                   </div>
                 </div>
                 <div className="text-xl font-semibold text-primary">R$ {BASE_PRICE}</div>
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-border bg-background/40 p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="text-sm font-semibold text-foreground">Secretária</div>
+                  <div className="mt-0.5 text-xs text-muted-foreground">
+                    Grátis para 1 unidade / número. A partir de 2, R$ 150 por unidade.
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-xs text-muted-foreground line-through">R$ 1250,00</div>
+                  <div className="text-sm font-semibold text-foreground">
+                    {secretariaExtra === 0 ? "GRÁTIS!" : `+ R$ ${secretariaExtra}`}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <label htmlFor="secretariaQty" className="text-xs font-medium text-muted-foreground">
+                  Quantidade de números
+                </label>
+                <input
+                  id="secretariaQty"
+                  type="number"
+                  min={1}
+                  step={1}
+                  value={secretariaQty}
+                  onChange={(e) => {
+                    const parsed = Number.parseInt(e.target.value, 10);
+                    setSecretariaQty(Number.isNaN(parsed) ? 1 : Math.max(1, parsed));
+                  }}
+                  className="mt-2 h-10 w-28 rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none ring-0 transition-colors focus:border-primary"
+                />
               </div>
             </div>
 
