@@ -87,6 +87,7 @@ const WEBHOOK_EVOLUTION_URL = "https://webhook.monarcahub.com/webhook/evo-manage
 const WEBHOOK_QR_HTML_URL = "https://webhook.monarcahub.com/webhook/qrcode";
 const WEBHOOK_SIGNUP_SYNC_URL = "https://webhook.monarcahub.com/webhook/signup-sync";
 const WEBHOOK_PARTNERS_URL = "https://webhook.monarcahub.com/webhook/parceiros";
+const WEBHOOK_TRAINING_FILE_URL = "https://webhook.monarcahub.com/webhook/treinar-com-file";
 
 // Configurações do Chatwoot
 const CHATWOOT_BASE_URL = "https://chat.monarcahub.com";
@@ -1250,6 +1251,9 @@ function Dashboard({ session }) {
   const [logs, setLogs] = useState([]);
   const [trainingError, setTrainingError] = useState("");
   const [instagramError, setInstagramError] = useState("");
+  const [trainingFile, setTrainingFile] = useState(null);
+  const [isTrainingFileSending, setIsTrainingFileSending] = useState(false);
+  const [trainingFileFeedback, setTrainingFileFeedback] = useState("");
 
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [isQrGenerating, setIsQrGenerating] = useState(false);
@@ -1974,6 +1978,49 @@ function Dashboard({ session }) {
     const newState = !gymData.ai_active_instagram;
     setGymData((prev) => ({ ...prev, ai_active_instagram: newState }));
     await handlePartialSave({ ai_active_instagram: newState, needs_reprocessing: true });
+  };
+
+  const handleTrainingFileSend = async () => {
+    if (!trainingFile) {
+      setTrainingFileFeedback("Selecione um arquivo antes de enviar.");
+      return;
+    }
+
+    const maxBytes = 20 * 1024 * 1024;
+    if (trainingFile.size > maxBytes) {
+      setTrainingFileFeedback("Arquivo muito grande. Limite de 20MB.");
+      return;
+    }
+
+    setIsTrainingFileSending(true);
+    setTrainingFileFeedback("");
+
+    try {
+      const formData = new FormData();
+      formData.append("file", trainingFile);
+      formData.append("event", "training_file_uploaded");
+      formData.append("user_id", userId);
+      formData.append("email", session?.user?.email ?? "");
+      formData.append("instance_name", instanceName);
+      formData.append("gym_name", gymData?.gym_name ?? "");
+      formData.append("uploaded_at", new Date().toISOString());
+
+      const response = await fetch(WEBHOOK_TRAINING_FILE_URL, {
+        method: "POST",
+        mode: "cors",
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error(`Falha ao enviar arquivo (${response.status})`);
+
+      setTrainingFileFeedback("Arquivo enviado com sucesso para reforçar o treinamento da IA.");
+      setTrainingFile(null);
+    } catch (error) {
+      console.error("Erro ao enviar arquivo de treino:", error);
+      setTrainingFileFeedback("Não foi possível enviar o arquivo agora. Tente novamente.");
+    } finally {
+      setIsTrainingFileSending(false);
+    }
   };
 
   // CÁLCULO DE PREÇO (COM DESCONTO ONBOARDING)
@@ -2757,6 +2804,33 @@ function Dashboard({ session }) {
                   value={gymData.faq_text}
                   onChange={(e) => setGymData({ ...gymData, faq_text: e.target.value })}
                 />
+                <div className="mb-6 bg-gray-900 border border-gray-700 rounded-lg p-4">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Arquivo para Treinar IA</label>
+                  <p className="text-xs text-gray-500 mb-3">
+                    Suba um arquivo com informações do seu negócio para reforçar a inteligência do agente.
+                  </p>
+                  <div className="flex flex-col md:flex-row gap-3 md:items-center">
+                    <input
+                      type="file"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] ?? null;
+                        setTrainingFile(file);
+                        setTrainingFileFeedback("");
+                      }}
+                      className="w-full text-sm text-gray-300 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-orange-500/20 file:text-orange-300 hover:file:bg-orange-500/30"
+                    />
+                    <Button
+                      onClick={handleTrainingFileSend}
+                      disabled={isTrainingFileSending}
+                      className="md:w-auto w-full"
+                    >
+                      {isTrainingFileSending ? "Enviando arquivo..." : "Enviar arquivo"}
+                      <Upload className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  {trainingFile && <p className="mt-2 text-xs text-gray-400">Arquivo selecionado: {trainingFile.name}</p>}
+                  {trainingFileFeedback && <p className="mt-3 text-xs text-orange-300">{trainingFileFeedback}</p>}
+                </div>
                 <div className="my-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                   <CheckboxGroup
                     icon={PhoneCall}
